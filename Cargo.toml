@@ -147,9 +147,18 @@ dinit = []
 [lints.clippy]
 new_without_default = "allow"
 
+
 [profile.release]
+opt-level = 3          
+lto = "fat"           
+codegen-units = 1     
 overflow-checks = false
-lto = "fat"
+incremental = false    
+panic = "abort"        
+strip = true           
+
+
+
 
 [profile.opt]
 inherits = "release"
