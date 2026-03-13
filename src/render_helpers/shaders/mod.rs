@@ -8,16 +8,13 @@ use smithay::backend::renderer::gles::{
 
 use super::renderer::NiriRenderer;
 use super::shader_element::ShaderProgram;
-use crate::render_helpers::blur::BlurProgram;
 
 pub struct Shaders {
     pub border: Option<ShaderProgram>,
     pub shadow: Option<ShaderProgram>,
     pub clipped_surface: Option<GlesTexProgram>,
-    pub postprocess_and_clip: Option<GlesTexProgram>,
     pub resize: Option<ShaderProgram>,
     pub gradient_fade: Option<GlesTexProgram>,
-    pub blur: Option<BlurProgram>,
     pub custom_resize: RefCell<Option<ShaderProgram>>,
     pub custom_close: RefCell<Option<ShaderProgram>>,
     pub custom_open: RefCell<Option<ShaderProgram>>,
@@ -38,10 +35,7 @@ impl Shaders {
 
         let border = ShaderProgram::compile(
             renderer,
-            concat!(
-                include_str!("border.frag"),
-                include_str!("rounding_alpha.frag")
-            ),
+            include_str!("border.frag"),
             &[
                 UniformName::new("colorspace", UniformType::_1f),
                 UniformName::new("hue_interpolation", UniformType::_1f),
@@ -64,10 +58,7 @@ impl Shaders {
 
         let shadow = ShaderProgram::compile(
             renderer,
-            concat!(
-                include_str!("shadow.frag"),
-                include_str!("rounding_alpha.frag")
-            ),
+            include_str!("shadow.frag"),
             &[
                 UniformName::new("shadow_color", UniformType::_4f),
                 UniformName::new("sigma", UniformType::_1f),
@@ -87,11 +78,7 @@ impl Shaders {
 
         let clipped_surface = renderer
             .compile_custom_texture_shader(
-                concat!(
-                    include_str!("clipped_surface.frag"),
-                    include_str!("rounding_alpha.frag"),
-                    "\nvec4 postprocess(vec4 color) { return color; }",
-                ),
+                include_str!("clipped_surface.frag"),
                 &[
                     UniformName::new("niri_scale", UniformType::_1f),
                     UniformName::new("geo_size", UniformType::_2f),
@@ -101,28 +88,6 @@ impl Shaders {
             )
             .map_err(|err| {
                 warn!("error compiling clipped surface shader: {err:?}");
-            })
-            .ok();
-
-        let postprocess_and_clip = renderer
-            .compile_custom_texture_shader(
-                concat!(
-                    include_str!("clipped_surface.frag"),
-                    include_str!("rounding_alpha.frag"),
-                    include_str!("postprocess.frag"),
-                ),
-                &[
-                    UniformName::new("niri_scale", UniformType::_1f),
-                    UniformName::new("geo_size", UniformType::_2f),
-                    UniformName::new("corner_radius", UniformType::_4f),
-                    UniformName::new("input_to_geo", UniformType::Matrix3x3),
-                    UniformName::new("noise", UniformType::_1f),
-                    UniformName::new("saturation", UniformType::_1f),
-                    UniformName::new("bg_color", UniformType::_4f),
-                ],
-            )
-            .map_err(|err| {
-                warn!("error compiling postprocess_and_clip shader: {err:?}");
             })
             .ok();
 
@@ -142,20 +107,12 @@ impl Shaders {
             })
             .ok();
 
-        let blur = BlurProgram::compile(renderer)
-            .map_err(|err| {
-                warn!("error compiling blur shaders: {err:?}");
-            })
-            .ok();
-
         Self {
             border,
             shadow,
             clipped_surface,
-            postprocess_and_clip,
             resize,
             gradient_fade,
-            blur,
             custom_resize: RefCell::new(None),
             custom_close: RefCell::new(None),
             custom_open: RefCell::new(None),
@@ -226,7 +183,6 @@ fn compile_resize_program(
     let mut program = include_str!("resize_prelude.frag").to_string();
     program.push_str(src);
     program.push_str(include_str!("resize_epilogue.frag"));
-    program.push_str(include_str!("rounding_alpha.frag"));
 
     ShaderProgram::compile(
         renderer,

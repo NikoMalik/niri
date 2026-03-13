@@ -19,7 +19,7 @@ use zbus::object_server::SignalEmitter;
 use crate::dbus::mutter_screen_cast::{self, CursorMode, ScreenCastToNiri, StreamTargetId};
 use crate::niri::{CastTarget, Niri, OutputRenderElements, PointerRenderElements, State};
 use crate::niri_render_elements;
-use crate::render_helpers::{RenderCtx, RenderTarget};
+use crate::render_helpers::RenderTarget;
 use crate::utils::{get_monotonic_time, CastSessionId, CastStreamId};
 use crate::window::mapped::{MappedId, WindowCastRenderElements};
 
@@ -575,12 +575,13 @@ impl Niri {
             }
 
             if cursor_data.is_none() {
-                let ctx = RenderCtx {
+                self.render_inner(
                     renderer,
-                    target: RenderTarget::Screencast,
-                    xray: None,
-                };
-                self.render(ctx, output, false, &mut |elem| elements.push(elem.into()));
+                    output,
+                    false,
+                    RenderTarget::Screencast,
+                    &mut |elem| elements.push(elem.into()),
+                );
 
                 let mut pointer_pos = Point::default();
                 if self.pointer_visibility.is_visible() {

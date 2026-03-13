@@ -1,5 +1,5 @@
 use niri::layout::{LayoutElement, SizingMode};
-use niri::render_helpers::{RenderCtx, RenderTarget};
+use niri::render_helpers::RenderTarget;
 use smithay::backend::renderer::element::RenderElement;
 use smithay::backend::renderer::gles::GlesRenderer;
 use smithay::utils::{Physical, Point, Scale, Size};
@@ -53,15 +53,14 @@ impl TestCase for Window {
             .downscale(2.);
 
         let mut rv = Vec::new();
-        let ctx = RenderCtx {
+        self.window.render_normal(
             renderer,
-            target: RenderTarget::Output,
-            xray: None,
-        };
-        self.window
-            .render_normal(ctx, location, Scale::from(1.), 1., &mut |elem| {
-                rv.push(Box::new(elem) as _)
-            });
+            location,
+            Scale::from(1.),
+            1.,
+            RenderTarget::Output,
+            &mut |elem| rv.push(Box::new(elem) as _),
+        );
         rv
     }
 }

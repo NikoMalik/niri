@@ -1,8 +1,6 @@
 use niri_ipc::ColumnDisplay;
 
-use crate::appearance::{
-    BackgroundEffectRule, BlockOutFrom, BorderRule, CornerRadius, ShadowRule, TabIndicatorRule,
-};
+use crate::appearance::{BlockOutFrom, BorderRule, CornerRadius, ShadowRule, TabIndicatorRule};
 use crate::layout::DefaultPresetSize;
 use crate::utils::RegexEq;
 use crate::FloatOrInt;
@@ -74,8 +72,6 @@ pub struct WindowRule {
     pub scroll_factor: Option<FloatOrInt<0, 100>>,
     #[knuffel(child, unwrap(argument))]
     pub tiled_state: Option<bool>,
-    #[knuffel(child, default)]
-    pub background_effect: BackgroundEffectRule,
 }
 
 #[derive(knuffel::Decode, Debug, Default, Clone, PartialEq)]

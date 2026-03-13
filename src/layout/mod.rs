@@ -34,7 +34,6 @@
 use std::collections::HashMap;
 use std::mem;
 use std::rc::Rc;
-use std::sync::Arc;
 use std::time::Duration;
 
 use monitor::{InsertHint, InsertPosition, InsertWorkspace, MonitorAddWindowTarget};
@@ -65,8 +64,7 @@ use crate::render_helpers::renderer::NiriRenderer;
 use crate::render_helpers::snapshot::RenderSnapshot;
 use crate::render_helpers::solid_color::{SolidColorBuffer, SolidColorRenderElement};
 use crate::render_helpers::texture::TextureBuffer;
-use crate::render_helpers::xray::Xray;
-use crate::render_helpers::{BakedBuffer, RenderCtx};
+use crate::render_helpers::{BakedBuffer, RenderTarget};
 use crate::rubber_band::RubberBand;
 use crate::utils::transaction::{Transaction, TransactionBlocker};
 use crate::utils::{
@@ -156,38 +154,41 @@ pub trait LayoutElement {
     /// location.
     fn render<R: NiriRenderer>(
         &self,
-        mut ctx: RenderCtx<R>,
+        renderer: &mut R,
         location: Point<f64, Logical>,
         scale: Scale<f64>,
         alpha: f32,
+        target: RenderTarget,
         push: &mut dyn FnMut(LayoutElementRenderElement<R>),
     ) {
-        self.render_popups(ctx.r(), location, scale, alpha, push);
-        self.render_normal(ctx.r(), location, scale, alpha, push);
+        self.render_popups(renderer, location, scale, alpha, target, push);
+        self.render_normal(renderer, location, scale, alpha, target, push);
     }
 
     /// Renders the non-popup parts of the element.
     fn render_normal<R: NiriRenderer>(
         &self,
-        ctx: RenderCtx<R>,
+        renderer: &mut R,
         location: Point<f64, Logical>,
         scale: Scale<f64>,
         alpha: f32,
+        target: RenderTarget,
         push: &mut dyn FnMut(LayoutElementRenderElement<R>),
     ) {
-        let _ = (ctx, location, scale, alpha, push);
+        let _ = (renderer, location, scale, alpha, target, push);
     }
 
     /// Renders the popups of the element.
     fn render_popups<R: NiriRenderer>(
         &self,
-        ctx: RenderCtx<R>,
+        renderer: &mut R,
         location: Point<f64, Logical>,
         scale: Scale<f64>,
         alpha: f32,
+        target: RenderTarget,
         push: &mut dyn FnMut(LayoutElementRenderElement<R>),
     ) {
-        let _ = (ctx, location, scale, alpha, push);
+        let _ = (renderer, location, scale, alpha, target, push);
     }
 
     /// Requests the element to change its size.
@@ -287,16 +288,6 @@ pub trait LayoutElement {
     fn cancel_interactive_resize(&mut self);
     fn interactive_resize_data(&self) -> Option<InteractiveResizeData>;
 
-    /// Blur region (non-overlapping rects) under the main surface of this window.
-    fn blur_region(&self) -> Option<Arc<Vec<Rectangle<i32, Logical>>>> {
-        None
-    }
-
-    /// Returns the geometry of this window's main surface relative to the visual geometry.
-    fn main_surface_geo(&self) -> Rectangle<i32, Logical> {
-        Rectangle::from_size(self.size())
-    }
-
     fn on_commit(&mut self, serial: Serial);
 }
 
@@ -360,7 +351,6 @@ pub struct Options {
     pub animations: niri_config::Animations,
     pub gestures: niri_config::Gestures,
     pub overview: niri_config::Overview,
-    pub blur: niri_config::Blur,
     // Debug flags.
     pub disable_resize_throttling: bool,
     pub disable_transactions: bool,
@@ -621,7 +611,6 @@ impl Options {
             animations: config.animations.clone(),
             gestures: config.gestures,
             overview: config.overview,
-            blur: config.blur,
             disable_resize_throttling: config.debug.disable_resize_throttling,
             disable_transactions: config.debug.disable_transactions,
             deactivate_unfocused_windows: config.debug.deactivate_unfocused_windows,
@@ -4607,27 +4596,12 @@ impl<W: LayoutElement> Layout<W> {
         }
     }
 
-    pub fn store_unmap_snapshot(
-        &mut self,
-        renderer: &mut GlesRenderer,
-        xray: Option<&mut Xray>,
-        xray_has_blocked_out_layers: bool,
-        window: &W::Id,
-    ) {
+    pub fn store_unmap_snapshot(&mut self, renderer: &mut GlesRenderer, window: &W::Id) {
         let _span = tracy_client::span!("Layout::store_unmap_snapshot");
-
-        let zoom = self.overview_zoom();
 
         if let Some(InteractiveMoveState::Moving(move_)) = &mut self.interactive_move {
             if move_.tile.window().id() == window {
-                let pos_in_backdrop = move_.tile_render_location(zoom);
-                move_.tile.store_unmap_snapshot_if_empty(
-                    renderer,
-                    xray,
-                    xray_has_blocked_out_layers,
-                    pos_in_backdrop,
-                    zoom,
-                );
+                move_.tile.store_unmap_snapshot_if_empty(renderer);
                 return;
             }
         }
@@ -4635,16 +4609,9 @@ impl<W: LayoutElement> Layout<W> {
         match &mut self.monitor_set {
             MonitorSet::Normal { monitors, .. } => {
                 for mon in monitors {
-                    for (ws, geo) in mon.workspaces_with_render_geo_mut(false) {
+                    for ws in &mut mon.workspaces {
                         if ws.has_window(window) {
-                            ws.store_unmap_snapshot_if_empty(
-                                renderer,
-                                xray,
-                                xray_has_blocked_out_layers,
-                                window,
-                                geo.loc,
-                                zoom,
-                            );
+                            ws.store_unmap_snapshot_if_empty(renderer, window);
                             return;
                         }
                     }
@@ -4653,14 +4620,7 @@ impl<W: LayoutElement> Layout<W> {
             MonitorSet::NoOutputs { workspaces, .. } => {
                 for ws in workspaces {
                     if ws.has_window(window) {
-                        ws.store_unmap_snapshot_if_empty(
-                            renderer,
-                            xray,
-                            xray_has_blocked_out_layers,
-                            window,
-                            Point::new(0., 0.),
-                            zoom,
-                        );
+                        ws.store_unmap_snapshot_if_empty(renderer, window);
                         return;
                     }
                 }
@@ -4761,8 +4721,9 @@ impl<W: LayoutElement> Layout<W> {
 
     pub fn render_interactive_move_for_output<R: NiriRenderer>(
         &self,
-        ctx: RenderCtx<R>,
+        renderer: &mut R,
         output: &Output,
+        target: RenderTarget,
         push: &mut dyn FnMut(RescaleRenderElement<TileRenderElement<R>>),
     ) {
         if self.update_render_elements_time != self.clock.now() {
@@ -4779,22 +4740,16 @@ impl<W: LayoutElement> Layout<W> {
 
         let scale = Scale::from(move_.output.current_scale().fractional_scale());
         let zoom = self.overview_zoom();
-        let pos_in_backdrop = move_.tile_render_location(zoom);
-
-        move_.tile.render(
-            ctx,
-            pos_in_backdrop,
-            pos_in_backdrop,
-            zoom,
-            true,
-            &mut |elem| {
+        let location = move_.tile_render_location(zoom);
+        move_
+            .tile
+            .render(renderer, location, true, target, &mut |elem| {
                 push(RescaleRenderElement::from_element(
                     elem,
-                    pos_in_backdrop.to_physical_precise_round(scale),
+                    location.to_physical_precise_round(scale),
                     zoom,
                 ));
-            },
-        );
+            });
     }
 
     pub fn refresh(&mut self, is_active: bool) {
