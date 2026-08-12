@@ -96,6 +96,7 @@ wayland-scanner = "0.31.11"
 wayland-server = "0.31.14"
 xcursor = "0.3.11"
 zbus = { version = "5.18.0", optional = true }
+mimalloc = { version = "0.1.52", features = ["override", "no_thp"] }
 
 [dependencies.smithay]
 workspace = true
@@ -156,7 +157,6 @@ lto = "fat"
 codegen-units = 1     
 overflow-checks = false
 incremental = false    
-panic = "abort"        
 strip = true           
 
 
@@ -169,7 +169,6 @@ codegen-units = 1
 incremental = false
 strip = true
 opt-level = 3
-panic = "abort"
 
 [profile.release.package.niri-config]
 # knuffel with chomsky generates a metric ton of debuginfo.
