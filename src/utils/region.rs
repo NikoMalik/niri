@@ -1,5 +1,5 @@
+use bbtree::unsync::BBTreeSet;
 use std::cmp::{max, min};
-use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use smithay::utils::{Logical, Physical, Point, Rectangle, Scale};
@@ -100,7 +100,7 @@ pub fn region_to_non_overlapping_rects(
     output.clear();
 
     // Collect all unique Y coordinates.
-    let ys = BTreeSet::from_iter(
+    let ys = BBTreeSet::from_iter(
         region
             .rects
             .iter()

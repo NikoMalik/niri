@@ -750,6 +750,10 @@ impl State {
                     self.niri.event_loop.remove(token);
                 }
             }
+            Action::SetTearing(on, output) => {
+                self.niri.set_tearing(on, output);
+                self.niri.queue_redraw_all();
+            }
             Action::Suspend => {
                 self.backend.suspend();
 

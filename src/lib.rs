@@ -10,12 +10,14 @@ pub mod cursor;
 #[cfg(feature = "dbus")]
 pub mod dbus;
 pub mod frame_clock;
+pub mod game;
 pub mod handlers;
 pub mod input;
 pub mod ipc;
 pub mod layer;
 pub mod layout;
 pub mod niri;
+pub mod pixel_corners;
 pub mod protocols;
 pub mod render_helpers;
 pub mod rubber_band;

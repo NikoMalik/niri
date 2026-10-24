@@ -97,6 +97,7 @@ wayland-server = "0.31.14"
 xcursor = "0.3.11"
 zbus = { version = "5", optional = true }
 mimalloc = { version = "0.1.52", features = ["override", "no_thp"] }
+bbtree = "0.1.5"
 
 [dependencies.smithay]
 workspace = true
