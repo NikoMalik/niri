@@ -36,7 +36,8 @@ use mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
-const DEFAULT_LOG_FILTER: &str = "niri=debug,smithay::backend::renderer::gles=error";
+const DEFAULT_LOG_FILTER: &str =
+    "niri=debug,smithay::backend::renderer::gles=error,smithay::backend::drm::compositor=info";
 
 #[cfg(feature = "profile-with-tracy-allocations")]
 #[global_allocator]
