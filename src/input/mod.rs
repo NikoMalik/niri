@@ -883,6 +883,14 @@ impl State {
                     });
                 }
             }
+            Action::SetPixelCorners(pixel, steps) => {
+                crate::pixel_corners::set(pixel as f32, steps);
+                self.niri
+                    .layout
+                    .with_windows_mut(|mapped, _| mapped.recompute_rules_later());
+                self.niri.refresh_window_rules();
+                self.niri.queue_redraw_all();
+            }
             Action::ToggleKeyboardShortcutsInhibit => {
                 if let Some(inhibitor) = self.niri.keyboard_focus.surface().and_then(|surface| {
                     self.niri

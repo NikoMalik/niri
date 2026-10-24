@@ -236,6 +236,21 @@ pub enum Action {
         #[cfg_attr(feature = "clap", arg(long, action = clap::ArgAction::Set))]
         path: Option<String>,
     },
+
+    /// Give windows pixel staircase corners
+    ///
+    /// A window without a corner radius of its own gets `steps` steps of `pixel` logical pixels;
+    /// corners are drawn with hard edges, the border too. 0 turns it off.
+    #[cfg_attr(feature = "clap", clap(about = "Set pixel staircase window corners"))]
+    SetPixelCorners {
+        /// The staircase's pixel in logical pixels; 0 to turn it off.
+        #[cfg_attr(feature = "clap", arg())]
+        pixel: f64,
+        /// Steps per corner.
+        #[cfg_attr(feature = "clap", arg(long, default_value_t = 2))]
+        #[serde(default = "default_pixel_steps")]
+        steps: u32,
+    },
     /// Screenshot the focused screen.
     ScreenshotScreen {
         /// Write the screenshot to disk in addition to putting it in your clipboard.
@@ -2137,6 +2152,10 @@ fn default_true() -> bool {
 
 fn default_position_change() -> PositionChange {
     PositionChange::AdjustFixed(0.)
+}
+
+fn default_pixel_steps() -> u32 {
+    2
 }
 
 #[cfg(test)]

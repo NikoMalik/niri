@@ -324,6 +324,10 @@ impl ResolvedWindowRules {
             }
 
             resolved.open_on_output = open_on_output.map(|x| x.to_owned());
+            let radius = crate::pixel_corners::default_radius();
+            if radius > 0. && resolved.geometry_corner_radius == Some(CornerRadius::default()) {
+                resolved.geometry_corner_radius = Some(CornerRadius::from(radius));
+            }
             resolved.open_on_workspace = open_on_workspace.map(|x| x.to_owned());
         });
 

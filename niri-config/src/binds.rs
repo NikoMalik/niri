@@ -314,6 +314,8 @@ pub enum Action {
     #[knuffel(skip)]
     SwitchPresetWindowWidthById(u64),
     #[knuffel(skip)]
+    SetPixelCorners(f64, u32),
+    #[knuffel(skip)]
     SwitchPresetWindowWidthBackById(u64),
     SwitchPresetWindowHeight,
     SwitchPresetWindowHeightBack,
@@ -612,6 +614,11 @@ impl From<niri_ipc::Action> for Action {
             niri_ipc::Action::SwitchPresetWindowWidth { id: Some(id) } => {
                 Self::SwitchPresetWindowWidthById(id)
             }
+
+            niri_ipc::Action::SetPixelCorners { pixel, steps } => {
+                Self::SetPixelCorners(pixel, steps)
+            }
+
             niri_ipc::Action::SwitchPresetWindowWidthBack { id: Some(id) } => {
                 Self::SwitchPresetWindowWidthBackById(id)
             }
