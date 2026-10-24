@@ -237,6 +237,27 @@ pub enum Action {
         path: Option<String>,
     },
 
+    /// Let a fullscreen game's frames tear on its output (angel-niri).
+    ///
+    /// While a fullscreen window is on top of that output, a frame is shown at once instead of at
+    /// the next vblank when nothing but its main buffer changed: less input lag, some tearing.
+    #[cfg_attr(
+        feature = "clap",
+        clap(about = "Let a fullscreen game tear for less lag")
+    )]
+    SetTearing {
+        /// Tearing allowed (`true`, the default) or off.
+        #[serde(default = "default_true")]
+        #[cfg_attr(feature = "clap", arg(long, action = clap::ArgAction::Set, default_value_t = true))]
+        on: bool,
+        /// The game's output.
+        ///
+        /// If `None`, the active output at the moment of the call.
+        #[cfg_attr(feature = "clap", arg(long))]
+        #[serde(default)]
+        output: Option<String>,
+    },
+
     /// Give windows pixel staircase corners
     ///
     /// A window without a corner radius of its own gets `steps` steps of `pixel` logical pixels;

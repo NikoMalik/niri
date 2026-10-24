@@ -1960,6 +1960,7 @@ impl Tty {
 
         // Hand them over to the DRM.
         let drm_compositor = &mut surface.compositor;
+        drm_compositor.set_allow_tearing(niri.tearing_now(output));
         match drm_compositor.render_frame::<_, _>(&mut renderer, &elements, [0.; 4], flags) {
             Ok(res) => {
                 let needs_sync = res.needs_sync()

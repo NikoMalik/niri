@@ -258,6 +258,8 @@ pub struct Niri {
     // Windows which don't have a buffer attached yet.
     pub unmapped_windows: HashMap<WlSurface, Unmapped>,
 
+    pub tearing_output: Option<String>,
+
     /// Layer surfaces which don't have a buffer attached yet.
     pub unmapped_layer_surfaces: HashSet<WlSurface>,
 
@@ -2781,6 +2783,7 @@ impl Niri {
             sorted_outputs: Vec::default(),
             output_state: HashMap::new(),
             unmapped_windows: HashMap::new(),
+            tearing_output: None,
             unmapped_layer_surfaces: HashSet::new(),
             mapped_layer_surfaces: HashMap::new(),
             root_surface: HashMap::new(),

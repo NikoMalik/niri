@@ -316,6 +316,8 @@ pub enum Action {
     #[knuffel(skip)]
     SetPixelCorners(f64, u32),
     #[knuffel(skip)]
+    SetTearing(bool, Option<String>),
+    #[knuffel(skip)]
     SwitchPresetWindowWidthBackById(u64),
     SwitchPresetWindowHeight,
     SwitchPresetWindowHeightBack,
@@ -441,6 +443,7 @@ impl From<niri_ipc::Action> for Action {
             }
             niri_ipc::Action::CloseWindow { id: None } => Self::CloseWindow,
             niri_ipc::Action::CloseWindow { id: Some(id) } => Self::CloseWindowById(id),
+            niri_ipc::Action::SetTearing { on, output } => Self::SetTearing(on, output),
             niri_ipc::Action::FullscreenWindow { id: None } => Self::FullscreenWindow,
             niri_ipc::Action::FullscreenWindow { id: Some(id) } => Self::FullscreenWindowById(id),
             niri_ipc::Action::ToggleWindowedFullscreen { id: None } => {
