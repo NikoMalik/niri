@@ -203,3 +203,17 @@ assets = [
     ["resources/niri.service", "/usr/lib/systemd/user/", "644"],
     ["resources/niri-shutdown.target", "/usr/lib/systemd/user/", "644"],
 ]
+
+
+
+
+
+
+
+
+
+
+
+[patch."https://github.com/Smithay/smithay.git"]
+smithay = { git = "https://github.com/NikoMalik/smithay.git", branch = "master" }
+smithay-drm-extras = { git = "https://github.com/NikoMalik/smithay.git", branch = "master" }
