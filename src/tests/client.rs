@@ -516,12 +516,6 @@ impl Window {
 }
 
 impl LayerSurface {
-    pub fn destroy(&self) {
-        self.viewport.destroy();
-        self.layer_surface.destroy();
-        self.surface.destroy();
-    }
-
     pub fn commit(&self) {
         self.surface.commit();
     }
