@@ -1,8 +1,9 @@
+use parking_lot::Mutex;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::Sender;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 
 use atomic::Ordering;
@@ -78,7 +79,7 @@ impl Transaction {
             return;
         }
 
-        let mut guard = self.inner.notifications.lock().unwrap();
+        let mut guard = self.inner.notifications.lock();
         guard.get_or_insert((sender, Vec::new())).1.push(client);
     }
 
@@ -181,7 +182,7 @@ impl Inner {
     fn complete(&self) {
         self.completed.store(true, Ordering::Relaxed);
 
-        let mut guard = self.notifications.lock().unwrap();
+        let mut guard = self.notifications.lock();
         if let Some((sender, clients)) = guard.take() {
             for client in clients {
                 if let Err(err) = sender.send(client) {

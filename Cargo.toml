@@ -28,13 +28,13 @@ tracy-client = { version = "0.18.5", default-features = false }
 [workspace.dependencies.smithay]
 # version = "0.4.1"
 git = "https://github.com/NikoMalik/smithay.git"
-rev = "60a40f2a2df816c6e076287923bcaf2287d8e30f"
+rev = "72ac5b288bcb570c09af9ae7681dbca5f80d80f3"
 default-features = false
 
 [workspace.dependencies.smithay-drm-extras]
 # version = "0.1.0"
 git = "https://github.com/NikoMalik/smithay.git"# path = "../smithay/smithay-drm-extras"
-rev = "60a40f2a2df816c6e076287923bcaf2287d8e30f"
+rev = "72ac5b288bcb570c09af9ae7681dbca5f80d80f3"
 
 [package]
 name = "niri"
@@ -95,9 +95,9 @@ wayland-scanner = "0.31.11"
 wayland-server = "0.31.14"
 xcursor = "0.3.11"
 zbus = { version = "5", optional = true }
-mimalloc = { version = "0.1.52", features = ["override", "no_thp"] }
+mimalloc = { package = "mold-mimalloc", version = "0.1.52" }
 bbtree = "0.1.5"
-
+parking_lot = "0.12.0"
 [dependencies.smithay]
 workspace = true
 features = [
@@ -158,7 +158,7 @@ codegen-units = 1
 overflow-checks = false
 incremental = false    
 strip = true           
-
+panic = "abort"
 
 
 
@@ -203,7 +203,6 @@ assets = [
     ["resources/niri.service", "/usr/lib/systemd/user/", "644"],
     ["resources/niri-shutdown.target", "/usr/lib/systemd/user/", "644"],
 ]
-
 
 
 

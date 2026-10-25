@@ -173,7 +173,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let spawn_at_startup = mem::take(&mut config.spawn_at_startup);
     let spawn_sh_at_startup = mem::take(&mut config.spawn_sh_at_startup);
-    *CHILD_ENV.write().unwrap() = mem::take(&mut config.environment);
+    *CHILD_ENV.write() = mem::take(&mut config.environment);
 
     store_and_increase_nofile_rlimit();
 
@@ -219,7 +219,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     xwayland::satellite::setup(&mut state);
     if let Some(satellite) = &state.niri.satellite {
         let name = satellite.display_name();
-        *CHILD_DISPLAY.write().unwrap() = Some(name.to_owned());
+        *CHILD_DISPLAY.write() = Some(name.to_owned());
         env::set_var("DISPLAY", name);
         info!("listening on X11 socket: {name}");
     } else {

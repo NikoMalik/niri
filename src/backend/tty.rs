@@ -1,3 +1,4 @@
+use parking_lot::Mutex;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -6,7 +7,7 @@ use std::num::NonZeroU64;
 use std::os::fd::{AsFd, OwnedFd};
 use std::path::Path;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 use std::{io, mem};
 
@@ -2252,7 +2253,7 @@ impl Tty {
             }
         }
 
-        let mut guard = self.ipc_outputs.lock().unwrap();
+        let mut guard = self.ipc_outputs.lock();
         *guard = ipc_outputs;
         niri.ipc_outputs_changed = true;
     }

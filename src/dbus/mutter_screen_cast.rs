@@ -1,7 +1,9 @@
+use parking_lot::Mutex;
+
 use std::collections::HashMap;
 use std::mem;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use serde::Deserialize;
 use zbus::object_server::{InterfaceRef, SignalEmitter};
@@ -124,7 +126,7 @@ impl ScreenCast {
         match server.at(&path, session.clone()).await {
             Ok(true) => {
                 let iface = server.interface(&path).await.unwrap();
-                self.sessions.lock().unwrap().push((session, iface));
+                self.sessions.lock().push((session, iface));
             }
             Ok(false) => return Err(fdo::Error::Failed("session path already exists".to_owned())),
             Err(err) => {
@@ -148,7 +150,7 @@ impl Session {
     async fn start(&self) {
         debug!("start");
 
-        for (stream, iface) in &*self.streams.lock().unwrap() {
+        for (stream, iface) in &*self.streams.lock() {
             stream.start(iface.signal_emitter().clone());
         }
     }
@@ -173,7 +175,7 @@ impl Session {
             warn!("error sending StopCast to niri: {err:?}");
         }
 
-        let streams = mem::take(&mut *self.streams.lock().unwrap());
+        let streams = mem::take(&mut *self.streams.lock());
         for (_, iface) in streams.iter() {
             server
                 .remove::<Stream, _>(iface.signal_emitter().path())
@@ -193,7 +195,7 @@ impl Session {
         debug!(connector, ?properties, "record_monitor");
 
         let output = {
-            let ipc_outputs = self.ipc_outputs.lock().unwrap();
+            let ipc_outputs = self.ipc_outputs.lock();
             ipc_outputs.values().find(|o| o.name == connector).cloned()
         };
         let Some(output) = output else {
@@ -221,7 +223,7 @@ impl Session {
         match server.at(&path, stream.clone()).await {
             Ok(true) => {
                 let iface = server.interface(&path).await.unwrap();
-                self.streams.lock().unwrap().push((stream, iface));
+                self.streams.lock().push((stream, iface));
             }
             Ok(false) => return Err(fdo::Error::Failed("stream path already exists".to_owned())),
             Err(err) => {
@@ -260,7 +262,7 @@ impl Session {
         match server.at(&path, stream.clone()).await {
             Ok(true) => {
                 let iface = server.interface(&path).await.unwrap();
-                self.streams.lock().unwrap().push((stream, iface));
+                self.streams.lock().push((stream, iface));
             }
             Ok(false) => return Err(fdo::Error::Failed("stream path already exists".to_owned())),
             Err(err) => {

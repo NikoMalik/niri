@@ -3,8 +3,9 @@
 //! This can eventually grow into a more complete backend if needed, but for now it's missing some
 //! crucial parts like dmabufs.
 
+use parking_lot::Mutex;
 use std::mem;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use anyhow::Context as _;
 use niri_config::OutputName;
@@ -91,7 +92,7 @@ impl Headless {
         });
 
         let physical_properties = output.physical_properties();
-        self.ipc_outputs.lock().unwrap().insert(
+        self.ipc_outputs.lock().insert(
             OutputId::next(),
             niri_ipc::Output {
                 name: output.name(),
