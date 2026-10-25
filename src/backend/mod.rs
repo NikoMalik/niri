@@ -1,6 +1,5 @@
-use parking_lot::Mutex;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use niri_config::{Config, ModKey};

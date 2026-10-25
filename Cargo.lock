@@ -1931,9 +1931,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.191"
+version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
+checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "libdisplay-info"
@@ -1984,6 +1984,15 @@ name = "libm"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
+
+[[package]]
+name = "libmimalloc-sys"
+version = "0.1.49"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a45a52f43e1c16f667ccfe4dd8c85b7f7c204fd5e3bf46c5b0db9a5c3c0b8e9"
+dependencies = [
+ "cc",
+]
 
 [[package]]
 name = "libredox"
@@ -2170,6 +2179,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mimalloc"
+version = "0.1.52"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d4139bb28d14ad1facf21d5eb8825051b326e172d216b39f6d31df53cc97862"
+dependencies = [
+ "libmimalloc-sys",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2193,24 +2211,6 @@ checksum = "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c"
 dependencies = [
  "adler2",
  "simd-adler32",
-]
-
-[[package]]
-name = "mold-mimalloc"
-version = "0.1.52"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b7efd1b6c74e7a09c1d296af4875b79118a5ea32d70736601a8323ddcbcb4c2"
-dependencies = [
- "mold-mimalloc-sys",
-]
-
-[[package]]
-name = "mold-mimalloc-sys"
-version = "0.1.49"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66a79c372cdbf45bf4548fd4aa40a0b2805ef2ee8e25e5185e11bf2b5c5de366"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -2275,13 +2275,12 @@ dependencies = [
  "libc",
  "libdisplay-info",
  "log",
- "mold-mimalloc",
+ "mimalloc",
  "niri-config",
  "niri-ipc",
  "ordered-float",
  "pango",
  "pangocairo",
- "parking_lot",
  "pipewire",
  "pkg-config",
  "png",
@@ -3479,7 +3478,7 @@ checksum = "e8e2fb0f499abb4d162f2bedad68f5ef91a1682b5a03596ddb67efd37768d100"
 [[package]]
 name = "smithay"
 version = "0.7.0"
-source = "git+https://github.com/NikoMalik/smithay.git?rev=72ac5b288bcb570c09af9ae7681dbca5f80d80f3#72ac5b288bcb570c09af9ae7681dbca5f80d80f3"
+source = "git+https://github.com/NikoMalik/smithay.git?rev=280dbe796349752031f59ac58acb07c43e4f7abd#280dbe796349752031f59ac58acb07c43e4f7abd"
 dependencies = [
  "aliasable",
  "appendlist",
@@ -3557,7 +3556,7 @@ dependencies = [
 [[package]]
 name = "smithay-drm-extras"
 version = "0.1.0"
-source = "git+https://github.com/NikoMalik/smithay.git?rev=72ac5b288bcb570c09af9ae7681dbca5f80d80f3#72ac5b288bcb570c09af9ae7681dbca5f80d80f3"
+source = "git+https://github.com/NikoMalik/smithay.git?rev=280dbe796349752031f59ac58acb07c43e4f7abd#280dbe796349752031f59ac58acb07c43e4f7abd"
 dependencies = [
  "drm",
  "libdisplay-info",
@@ -3689,7 +3688,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.61.2",

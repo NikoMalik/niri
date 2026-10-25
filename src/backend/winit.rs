@@ -1,9 +1,8 @@
-use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::mem;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use anyhow::Context as _;
 use niri_config::{Config, OutputName};
@@ -133,7 +132,7 @@ impl Winit {
                     }
 
                     {
-                        let mut ipc_outputs = winit.ipc_outputs.lock();
+                        let mut ipc_outputs = winit.ipc_outputs.lock().unwrap();
                         let output = ipc_outputs.values_mut().next().unwrap();
                         let mode = &mut output.modes[0];
                         mode.width = size.w.clamp(0, u16::MAX as i32) as u16;

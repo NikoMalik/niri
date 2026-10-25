@@ -1,9 +1,9 @@
-use parking_lot::RwLock;
 use std::ffi::OsStr;
 use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::RwLock;
 use std::{io, thread};
 
 use atomic::Atomic;
@@ -131,7 +131,7 @@ fn spawn_sync(
     process.env_remove("NOTIFY_SOCKET");
 
     // Set DISPLAY if needed.
-    let display = CHILD_DISPLAY.read();
+    let display = CHILD_DISPLAY.read().unwrap();
     if let Some(display) = &*display {
         process.env("DISPLAY", display);
     } else {
@@ -139,7 +139,7 @@ fn spawn_sync(
     }
 
     // Set configured environment.
-    let env = CHILD_ENV.read();
+    let env = CHILD_ENV.read().unwrap();
     for var in &env.0 {
         if let Some(value) = &var.value {
             process.env(&var.name, value);

@@ -1,11 +1,10 @@
-use parking_lot::Mutex;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::{env, io, process};
 
 use anyhow::Context;
@@ -275,7 +274,7 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
         Request::ReturnError => return Err(String::from("example compositor error")),
         Request::Version => Response::Version(version()),
         Request::Outputs => {
-            let ipc_outputs = ctx.ipc_outputs.lock().clone();
+            let ipc_outputs = ctx.ipc_outputs.lock().unwrap().clone();
             let outputs = ipc_outputs.values().cloned().map(|o| (o.name.clone(), o));
             Response::Outputs(outputs.collect())
         }
@@ -403,7 +402,7 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
         Request::Output { output, action } => {
             action.validate()?;
 
-            let ipc_outputs = ctx.ipc_outputs.lock();
+            let ipc_outputs = ctx.ipc_outputs.lock().unwrap();
             let found = ipc_outputs
                 .values()
                 .any(|o| OutputName::from_ipc_output(o).matches(&output));
@@ -434,6 +433,7 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
                         .backend
                         .ipc_outputs()
                         .lock()
+                        .unwrap()
                         .values()
                         .find(|o| o.name == active_output)
                         .cloned()

@@ -1,4 +1,3 @@
-use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsString;
@@ -8,7 +7,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use std::{env, mem, thread};
 
@@ -1942,7 +1941,7 @@ impl State {
             .clock
             .set_complete_instantly(config.animations.off);
 
-        *CHILD_ENV.write() = mem::take(&mut config.environment);
+        *CHILD_ENV.write().unwrap() = mem::take(&mut config.environment);
 
         let mut reload_xkb = false;
         let mut libinput_config_changed = false;
@@ -2174,7 +2173,7 @@ impl State {
             }
 
             // This won't change the systemd environment, but oh well.
-            *CHILD_DISPLAY.write() = display_name;
+            *CHILD_DISPLAY.write().unwrap() = display_name;
         }
 
         // Can't really update xdg-decoration settings since we have to hide the globals for CSD
@@ -2410,7 +2409,7 @@ impl State {
 
         let _span = tracy_client::span!("State::refresh_ipc_outputs");
 
-        for ipc_output in self.backend.ipc_outputs().lock().values_mut() {
+        for ipc_output in self.backend.ipc_outputs().lock().unwrap().values_mut() {
             let logical = self
                 .niri
                 .global_space
@@ -2423,7 +2422,7 @@ impl State {
         #[cfg(feature = "dbus")]
         self.niri.on_ipc_outputs_changed();
 
-        let new_config = self.backend.ipc_outputs().lock().clone();
+        let new_config = self.backend.ipc_outputs().lock().unwrap().clone();
         self.niri.output_management_state.notify_changes(new_config);
     }
 
@@ -5377,7 +5376,7 @@ impl Niri {
                 let primary_scanout_output = states
                     .data_map
                     .get_or_insert_threadsafe(Mutex::<PrimaryScanoutOutput>::default);
-                let mut primary_scanout_output = primary_scanout_output.lock();
+                let mut primary_scanout_output = primary_scanout_output.lock().unwrap();
 
                 let mut id = Id::from_wayland_resource(surface);
 
@@ -5429,7 +5428,7 @@ impl Niri {
                 let primary_scanout_output = states
                     .data_map
                     .get_or_insert_threadsafe(Mutex::<PrimaryScanoutOutput>::default);
-                let mut primary_scanout_output = primary_scanout_output.lock();
+                let mut primary_scanout_output = primary_scanout_output.lock().unwrap();
                 let mut id = Id::from_wayland_resource(surface);
 
                 // Background layers may be invisible normally but visible through an xray

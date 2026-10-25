@@ -1,8 +1,6 @@
-use parking_lot::Mutex;
-
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
 use smithay::utils::Size;
@@ -74,7 +72,7 @@ impl DisplayConfig {
         let mut monitors = Vec::new();
         let mut logical_monitors = Vec::new();
 
-        for output in self.ipc_outputs.lock().values() {
+        for output in self.ipc_outputs.lock().unwrap().values() {
             // Loosely matches the check in Mutter.
             let c = &output.name;
             let is_laptop_panel = is_laptop_panel(c);
@@ -179,7 +177,7 @@ impl DisplayConfig {
         logical_monitor_configs: Vec<LogicalMonitorConfiguration>,
         _properties: HashMap<String, OwnedValue>,
     ) -> fdo::Result<()> {
-        let current_conf = self.ipc_outputs.lock();
+        let current_conf = self.ipc_outputs.lock().unwrap();
         let mut new_conf = HashMap::new();
         for requested_config in logical_monitor_configs {
             if requested_config.monitors.len() > 1 {
