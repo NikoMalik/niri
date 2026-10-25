@@ -28,13 +28,13 @@ tracy-client = { version = "0.18.5", default-features = false }
 [workspace.dependencies.smithay]
 # version = "0.4.1"
 git = "https://github.com/NikoMalik/smithay.git"
-rev = "280dbe796349752031f59ac58acb07c43e4f7abd"
+rev = "e3010327fff2157be9458d5c53e3c6c4f22d18f8"
 default-features = false
 
 [workspace.dependencies.smithay-drm-extras]
 # version = "0.1.0"
 git = "https://github.com/NikoMalik/smithay.git"# path = "../smithay/smithay-drm-extras"
-rev = "280dbe796349752031f59ac58acb07c43e4f7abd"
+rev = "e3010327fff2157be9458d5c53e3c6c4f22d18f8"
 
 [package]
 name = "niri"
@@ -153,7 +153,7 @@ collapsible_match = "allow"
 
 [profile.release]
 opt-level = 3          
-lto = "fat"           
+lto = "thin"           
 codegen-units = 1     
 overflow-checks = false
 incremental = false    
@@ -164,7 +164,7 @@ panic = "abort"
 
 [profile.opt]
 inherits = "release"
-lto = "fat"
+lto = "thin"
 codegen-units = 1
 incremental = false
 strip = true
