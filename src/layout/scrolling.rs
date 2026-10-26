@@ -3790,8 +3790,6 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                 ) {
                     win.send_pending_configure();
                 }
-
-                win.refresh();
             }
         }
     }
