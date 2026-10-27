@@ -10,6 +10,7 @@ layout {
     center-focused-column "never"
     always-center-single-column
     empty-workspace-above-first
+    sticky-above-fullscreen
     default-column-display "tabbed"
     background-color "#003300"
     fullscreen-backdrop-color "#000000ff"
@@ -152,6 +153,19 @@ If set, niri will always add an empty workspace at the very start, in addition t
 ```kdl
 layout {
     empty-workspace-above-first
+}
+```
+
+### `sticky-above-fullscreen`
+
+If set, [sticky windows](./Configuration:-Window-Rules.md#open-sticky) stay visible on top of fullscreen windows.
+
+By default, sticky windows hide while a fullscreen window is focused, the same as regular floating windows.
+Focusing a sticky window still shows it above the fullscreen window.
+
+```kdl
+layout {
+    sticky-above-fullscreen
 }
 ```
 

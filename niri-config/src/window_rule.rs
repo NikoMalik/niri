@@ -34,6 +34,8 @@ pub struct WindowRule {
     #[knuffel(child, unwrap(argument))]
     pub open_floating: Option<bool>,
     #[knuffel(child, unwrap(argument))]
+    pub open_sticky: Option<bool>,
+    #[knuffel(child, unwrap(argument))]
     pub open_focused: Option<bool>,
     #[knuffel(child, unwrap(argument))]
     pub on_xdg_activate: Option<OnXdgActivate>,
@@ -148,6 +150,8 @@ pub struct Match {
     pub is_active_in_column: Option<bool>,
     #[knuffel(property)]
     pub is_floating: Option<bool>,
+    #[knuffel(property)]
+    pub is_sticky: Option<bool>,
     #[knuffel(property)]
     pub is_window_cast_target: Option<bool>,
     #[knuffel(property)]

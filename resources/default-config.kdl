@@ -319,13 +319,16 @@ window-rule {
     default-column-width {}
 }
 
-// Open the Firefox picture-in-picture player as floating by default.
+// Open the Firefox and Zen picture-in-picture player as floating and sticky by default,
+// so it stays visible on every workspace.
 window-rule {
     // This app-id regular expression will work for both:
     // - host Firefox (app-id is "firefox")
     // - Flatpak Firefox (app-id is "org.mozilla.firefox")
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    match app-id="^zen$" title="^Picture-in-Picture$"
     open-floating true
+    open-sticky true
 }
 
 // Example: block out two password managers from screen capture.
