@@ -118,6 +118,27 @@ impl MergeWith<ClipboardPart> for Clipboard {
     }
 }
 
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct PixelOverview {
+    pub pixel: f64,
+    pub font: String,
+}
+
+#[derive(knuffel::Decode, Debug, Clone, PartialEq)]
+pub struct PixelOverviewPart {
+    #[knuffel(child, unwrap(argument))]
+    pub pixel: Option<FloatOrInt<0, 65535>>,
+    #[knuffel(child, unwrap(argument))]
+    pub font: Option<String>,
+}
+
+impl MergeWith<PixelOverviewPart> for PixelOverview {
+    fn merge_with(&mut self, part: &PixelOverviewPart) {
+        merge!((self, part), pixel);
+        merge_clone!((self, part), font);
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PixelCorners {
     pub pixel: f64,

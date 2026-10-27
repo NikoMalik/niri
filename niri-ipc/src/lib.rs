@@ -272,6 +272,20 @@ pub enum Action {
         #[serde(default = "default_pixel_steps")]
         steps: u32,
     },
+    /// Draw the overview in pixels.
+    ///
+    /// Sharp (nearest-filtered) thumbnails and a frame of 2 × `pixel` logical pixels with notched
+    /// corners around every workspace, its name left of it in `font`. 0 turns it off.
+    #[cfg_attr(feature = "clap", clap(about = "Set the pixel overview"))]
+    SetPixelOverview {
+        /// The art pixel in logical pixels; 0 to turn it off.
+        #[cfg_attr(feature = "clap", arg())]
+        pixel: f64,
+        /// The workspace names' font, "Family SIZE" (size in logical pixels).
+        #[cfg_attr(feature = "clap", arg(long, default_value = ""))]
+        #[serde(default)]
+        font: String,
+    },
     /// Screenshot the focused screen.
     ScreenshotScreen {
         /// Write the screenshot to disk in addition to putting it in your clipboard.

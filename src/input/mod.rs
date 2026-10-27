@@ -1063,6 +1063,10 @@ impl State {
                 self.niri.refresh_window_rules();
                 self.niri.queue_redraw_all();
             }
+            Action::SetPixelOverview(pixel, font) => {
+                crate::pixel_overview::set(pixel as f32, font);
+                self.niri.queue_redraw_all();
+            }
             Action::ToggleKeyboardShortcutsInhibit => {
                 if let Some(inhibitor) = self.niri.keyboard_focus.surface().and_then(|surface| {
                     self.niri

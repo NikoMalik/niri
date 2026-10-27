@@ -435,6 +435,8 @@ pub enum Action {
     #[knuffel(skip)]
     SetPixelCorners(f64, u32),
     #[knuffel(skip)]
+    SetPixelOverview(f64, String),
+    #[knuffel(skip)]
     SetTearing(bool, Option<String>),
     #[knuffel(skip)]
     SwitchPresetWindowWidthBackById(u64),
@@ -742,6 +744,9 @@ impl From<niri_ipc::Action> for Action {
 
             niri_ipc::Action::SetPixelCorners { pixel, steps } => {
                 Self::SetPixelCorners(pixel, steps)
+            }
+            niri_ipc::Action::SetPixelOverview { pixel, font } => {
+                Self::SetPixelOverview(pixel, font)
             }
 
             niri_ipc::Action::SwitchPresetWindowWidthBack { id: Some(id) } => {

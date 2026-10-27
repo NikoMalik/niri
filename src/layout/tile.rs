@@ -258,7 +258,8 @@ impl<W: LayoutElement> Tile<W> {
             .layout
             .focus_ring
             .merged_with(&rules.focus_ring);
-        focus_ring_config.width = round_max1(focus_ring_config.width);
+        focus_ring_config.width =
+            round_max1(crate::pixel_corners::snap_width(focus_ring_config.width));
         self.focus_ring.update_config(focus_ring_config);
 
         let shadow_config = self.options.layout.shadow.merged_with(&rules.shadow);
@@ -408,7 +409,8 @@ impl<W: LayoutElement> Tile<W> {
             .layout
             .focus_ring
             .merged_with(&rules.focus_ring);
-        focus_ring_config.width = round_max1(focus_ring_config.width);
+        focus_ring_config.width =
+            round_max1(crate::pixel_corners::snap_width(focus_ring_config.width));
         self.focus_ring.update_config(focus_ring_config);
 
         let shadow_config = self.options.layout.shadow.merged_with(&rules.shadow);

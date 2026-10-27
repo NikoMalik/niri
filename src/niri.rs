@@ -2074,6 +2074,13 @@ impl State {
             window_rules_changed = true;
         }
 
+        if config.pixel_overview != old_config.pixel_overview {
+            crate::pixel_overview::set(
+                config.pixel_overview.pixel as f32,
+                config.pixel_overview.font.clone(),
+            );
+        }
+
         if config.layer_rules != old_config.layer_rules {
             layer_rules_changed = true;
         }
@@ -2776,6 +2783,10 @@ impl Niri {
         crate::pixel_corners::set(
             config_.pixel_corners.pixel as f32,
             config_.pixel_corners.steps,
+        );
+        crate::pixel_overview::set(
+            config_.pixel_overview.pixel as f32,
+            config_.pixel_overview.font.clone(),
         );
 
         let layout = Layout::new(animation_clock.clone(), &config_);
@@ -4827,6 +4838,12 @@ impl Niri {
 
         self.fill_xray_elements(ctx.as_gles(), output);
 
+        let overview = self
+            .layout
+            .monitor_for_output(output)
+            .is_some_and(|mon| mon.overview_clamped_progress().is_some());
+        crate::pixel_overview::set_filter(ctx.renderer.as_gles_renderer(), overview);
+
         // Reborrow to shorten lifetime to be able to put in xray.
         let mut ctx = ctx.r();
         let state = self.output_state.get(output).unwrap();
@@ -5071,6 +5088,18 @@ impl Niri {
 
                 process!(geo)(ws.render_background());
             }
+        }
+
+        {
+            let focus_ring = self.config.borrow().layout.focus_ring;
+            crate::pixel_overview::render(
+                ctx.renderer,
+                mon,
+                &output.name(),
+                focus_ring.active_color,
+                focus_ring.inactive_color,
+                push,
+            );
         }
 
         mon.render_workspace_shadows(ctx.renderer, &mut |elem| push(elem.into()));

@@ -2020,6 +2020,10 @@ impl<W: LayoutElement> Monitor<W> {
         }
     }
 
+    pub fn overview_clamped_progress(&self) -> Option<f64> {
+        self.overview_progress.as_ref().map(|p| p.clamped_value())
+    }
+
     pub fn render_workspace_shadows<R: NiriRenderer>(
         &self,
         renderer: &mut R,
