@@ -2085,13 +2085,15 @@ impl Tty {
             presentation_mode,
         ) {
             Ok(res) => {
-                let wait_for_frame_completion = device.is_nvidia
-                    || res.needs_sync()
-                    || self
-                        .config
-                        .borrow()
-                        .debug
-                        .wait_for_frame_completion_before_queueing;
+                let (async_fence_wait_disabled, force_wait) = {
+                    let debug = &self.config.borrow().debug;
+                    (
+                        debug.disable_async_fence_wait,
+                        debug.wait_for_frame_completion_before_queueing,
+                    )
+                };
+                let wait_for_frame_completion = !async_fence_wait_disabled
+                    && (device.is_nvidia || res.needs_sync() || force_wait);
                 let mut completion_fences = SmallVec::<[_; 4]>::new();
                 if wait_for_frame_completion {
                     // Take every plane's synchronization point out of Smithay. Once they have all
@@ -2110,6 +2112,13 @@ impl Tty {
                             if let Err(err) = sync.wait() {
                                 warn!("error waiting for frame completion: {err:?}");
                             }
+                        }
+                    }
+                } else if res.needs_sync() || force_wait {
+                    if let PrimaryPlaneElement::Swapchain(element) = &res.primary_element {
+                        let _span = tracy_client::span!("wait for completion");
+                        if let Err(err) = element.sync.wait() {
+                            warn!("error waiting for frame completion: {err:?}");
                         }
                     }
                 }

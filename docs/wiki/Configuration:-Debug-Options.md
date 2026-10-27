@@ -25,6 +25,7 @@ debug {
     disable-pipewire-dmabuf
     dbus-interfaces-in-non-session-instances
     wait-for-frame-completion-before-queueing
+    disable-async-fence-wait
     emulate-zero-presentation-time
     disable-resize-throttling
     disable-transactions
@@ -201,6 +202,21 @@ Useful for diagnosing certain synchronization and performance problems.
 ```kdl
 debug {
     wait-for-frame-completion-before-queueing
+}
+```
+
+### `disable-async-fence-wait`
+
+Don't wait for frame fences in the event loop before handing frames over to DRM.
+
+By default on NVIDIA, and on drivers without KMS input fences, niri waits for the GPU to finish a frame asynchronously and only then submits it.
+With this flag, niri submits frames right away with their fences like upstream niri does, and blocks on the GPU only when the driver has no input fence support.
+
+Useful for diagnosing stutter caused by the asynchronous wait.
+
+```kdl
+debug {
+    disable-async-fence-wait
 }
 ```
 
