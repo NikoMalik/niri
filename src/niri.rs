@@ -63,6 +63,7 @@ use smithay::reexports::calloop::{
     Interest, LoopHandle, LoopSignal, Mode, PostAction, RegistrationToken,
 };
 use smithay::reexports::wayland_protocols::ext::session_lock::v1::server::ext_session_lock_v1::ExtSessionLockV1;
+use smithay::reexports::wayland_protocols::wp::tearing_control::v1::server::wp_tearing_control_v1::PresentationHint;
 use smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel::WmCapabilities;
 use smithay::reexports::wayland_protocols_misc::server_decoration as _server_decoration;
 use smithay::reexports::wayland_protocols_wlr::screencopy::v1::server::zwlr_screencopy_manager_v1::ZwlrScreencopyManagerV1;
@@ -120,6 +121,7 @@ use smithay::wayland::shm::ShmState;
 use smithay::wayland::single_pixel_buffer::SinglePixelBufferState;
 use smithay::wayland::socket::ListeningSocketSource;
 use smithay::wayland::tablet_manager::TabletManagerState;
+use smithay::wayland::tearing_control::{TearingControlState, TearingControlSurfaceCachedState};
 use smithay::wayland::text_input::TextInputManagerState;
 use smithay::wayland::viewporter::ViewporterState;
 use smithay::wayland::virtual_keyboard::VirtualKeyboardManagerState;
@@ -355,6 +357,7 @@ pub struct Niri {
     pub popups: PopupManager,
     pub popup_grab: Option<PopupGrabState>,
     pub presentation_state: PresentationState,
+    pub tearing_control_state: TearingControlState,
     pub security_context_state: SecurityContextState,
     pub gamma_control_manager_state: GammaControlManagerState,
     pub activation_state: XdgActivationState,
@@ -2818,6 +2821,7 @@ impl Niri {
         );
         let presentation_state =
             PresentationState::new::<State>(&display_handle, Monotonic::ID as u32);
+        let tearing_control_state = TearingControlState::new::<State>(&display_handle);
         let security_context_state =
             SecurityContextState::new::<State, _>(&display_handle, client_is_unrestricted);
 
@@ -3087,6 +3091,7 @@ impl Niri {
             bind_repeat_timer: Option::default(),
             commit_timing_wakeup_timer: None,
             presentation_state,
+            tearing_control_state,
             security_context_state,
             gamma_control_manager_state,
             activation_state,
@@ -5349,6 +5354,31 @@ impl Niri {
         backend.set_output_on_demand_vrr(self, output, current);
     }
 
+    pub fn output_allows_tearing(&self, output: &Output) -> bool {
+        self.layout.windows_for_output(output).any(|mapped| {
+            let mut visible = false;
+            let mut hint = false;
+
+            mapped.window.with_surfaces(|surface, states| {
+                if surface_primary_scanout_output(surface, states).as_ref() != Some(output) {
+                    return;
+                }
+
+                visible = true;
+                let mut state = states
+                    .cached_state
+                    .get::<TearingControlSurfaceCachedState>();
+                hint |= *state.current().presentation_hint() == PresentationHint::Async;
+            });
+
+            match mapped.rules().allow_tearing {
+                Some(true) => visible,
+                Some(false) => false,
+                None => hint,
+            }
+        })
+    }
+
     pub fn update_primary_scanout_output(
         &self,
         output: &Output,
@@ -5614,6 +5644,7 @@ impl Niri {
                         render_element_states,
                         &feedback.render,
                         &feedback.scanout,
+                        &feedback.r#async,
                     )
                 },
             );
@@ -5629,6 +5660,7 @@ impl Niri {
                         render_element_states,
                         &feedback.render,
                         &feedback.scanout,
+                        &feedback.r#async,
                     )
                 },
             );
@@ -5645,6 +5677,7 @@ impl Niri {
                         render_element_states,
                         &feedback.render,
                         &feedback.scanout,
+                        &feedback.r#async,
                     )
                 },
             );
@@ -5661,6 +5694,7 @@ impl Niri {
                         render_element_states,
                         &feedback.render,
                         &feedback.scanout,
+                        &feedback.r#async,
                     )
                 },
             );
@@ -5677,6 +5711,7 @@ impl Niri {
                         render_element_states,
                         &feedback.render,
                         &feedback.scanout,
+                        &feedback.r#async,
                     )
                 },
             );
