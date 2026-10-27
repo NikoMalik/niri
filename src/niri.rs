@@ -21,6 +21,7 @@ use niri_config::{
     Bind, Config, FloatOrInt, Key, Modifiers, OutputName, TrackLayout, WarpMouseToFocusMode,
     WorkspaceReference, Xkb,
 };
+use smallvec::SmallVec;
 use smithay::backend::allocator::Fourcc;
 use smithay::backend::input::{InputTime, Keycode};
 use smithay::backend::renderer::damage::OutputDamageTracker;
@@ -580,6 +581,13 @@ pub enum RedrawState {
     Queued,
     /// We submitted a frame to the KMS and waiting for it to be presented.
     WaitingForVBlank { redraw_needed: bool },
+    /// Rendering is complete, but KMS submission is deferred until the GPU fence signals.
+    WaitingForFrameCompletion {
+        tokens: SmallVec<[RegistrationToken; 4]>,
+        redraw_needed: bool,
+    },
+    /// A redraw is queued, but delayed until the max-render-time deadline before the next VBlank.
+    WaitingForRenderDeadline(RegistrationToken),
     /// We did not submit anything to KMS and made a timer to fire at the estimated VBlank.
     WaitingForEstimatedVBlank(RegistrationToken),
     /// A redraw is queued on top of the above.
@@ -726,14 +734,20 @@ impl RedrawState {
             }
 
             // A redraw is already queued.
-            value @ (RedrawState::Queued | RedrawState::WaitingForEstimatedVBlankAndQueued(_)) => {
-                value
-            }
+            value @ (RedrawState::Queued
+            | RedrawState::WaitingForRenderDeadline(_)
+            | RedrawState::WaitingForEstimatedVBlankAndQueued(_)) => value,
 
             // We're waiting for VBlank, request a redraw afterwards.
             RedrawState::WaitingForVBlank { .. } => RedrawState::WaitingForVBlank {
                 redraw_needed: true,
             },
+            RedrawState::WaitingForFrameCompletion { tokens, .. } => {
+                RedrawState::WaitingForFrameCompletion {
+                    tokens,
+                    redraw_needed: true,
+                }
+            }
         }
     }
 }
@@ -907,6 +921,10 @@ impl State {
 
         for output in self.niri.queued_outputs() {
             if self.niri.is_queued(&output) {
+                if self.niri.defer_redraw_to_render_deadline(&output) {
+                    continue;
+                }
+
                 self.niri.redraw(&mut self.backend, &output);
 
                 let state = self.niri.output_state.get(&output).unwrap();
@@ -3475,6 +3493,12 @@ impl Niri {
             RedrawState::Idle => (),
             RedrawState::Queued => (),
             RedrawState::WaitingForVBlank { .. } => (),
+            RedrawState::WaitingForFrameCompletion { tokens, .. } => {
+                for token in tokens {
+                    self.event_loop.remove(token);
+                }
+            }
+            RedrawState::WaitingForRenderDeadline(token) => self.event_loop.remove(token),
             RedrawState::WaitingForEstimatedVBlank(token) => self.event_loop.remove(token),
             RedrawState::WaitingForEstimatedVBlankAndQueued(token) => self.event_loop.remove(token),
         }
@@ -5175,6 +5199,67 @@ impl Niri {
             let xray_pos = xray_pos.offset(loc);
             mapped.render_popups(ctx.r(), ns, loc, xray_pos, push);
         }
+    }
+
+    fn defer_redraw_to_render_deadline(&mut self, output: &Output) -> bool {
+        let max_render_time = {
+            let config = self.config.borrow();
+            if config.debug.force_tearing {
+                return false;
+            }
+            let name = output.user_data().get::<OutputName>().unwrap();
+            let Some(ms) = config
+                .outputs
+                .find(name)
+                .and_then(|c| c.max_render_time)
+                .filter(|ms| *ms > 0)
+            else {
+                return false;
+            };
+            Duration::from_millis(u64::from(ms))
+        };
+
+        if self.output_allows_tearing(output) || self.tearing_now(output) {
+            return false;
+        }
+
+        let state = self.output_state.get_mut(output).unwrap();
+        if !matches!(state.redraw_state, RedrawState::Queued)
+            || state.frame_clock.vrr()
+            || state.frame_clock.refresh_interval().is_none()
+        {
+            return false;
+        }
+
+        let deadline = state
+            .frame_clock
+            .next_presentation_time()
+            .saturating_sub(max_render_time);
+        let now = get_monotonic_time();
+        // Timers can fire a bit early, render right away instead of rescheduling a tiny wait.
+        if deadline <= now + Duration::from_micros(500) {
+            return false;
+        }
+
+        let _span = tracy_client::span!("Niri::defer_redraw_to_render_deadline");
+
+        let timer_output = output.clone();
+        let token = self
+            .event_loop
+            .insert_source(Timer::from_duration(deadline - now), move |_, _, state| {
+                if let Some(output_state) = state.niri.output_state.get_mut(&timer_output) {
+                    if matches!(
+                        output_state.redraw_state,
+                        RedrawState::WaitingForRenderDeadline(_)
+                    ) {
+                        output_state.redraw_state = RedrawState::Queued;
+                    }
+                }
+                TimeoutAction::Drop
+            })
+            .unwrap();
+        state.redraw_state = RedrawState::WaitingForRenderDeadline(token);
+        true
     }
 
     fn redraw(&mut self, backend: &mut Backend, output: &Output) {

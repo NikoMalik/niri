@@ -1206,6 +1206,7 @@ mod tests {
                 position x=10 y=20
                 mode "1920x1080@144"
                 max-bpc 10
+                max-render-time 4
                 variable-refresh-rate on-demand=true
                 background-color "rgba(25, 25, 102, 1.0)"
                 hot-corners {
@@ -1647,6 +1648,9 @@ mod tests {
                                 _10,
                             ),
                         ),
+                        max_render_time: Some(
+                            4,
+                        ),
                         mode: Some(
                             Mode {
                                 custom: false,
@@ -1693,6 +1697,7 @@ mod tests {
                         transform: Normal,
                         position: None,
                         max_bpc: None,
+                        max_render_time: None,
                         mode: Some(
                             Mode {
                                 custom: true,
@@ -1720,6 +1725,7 @@ mod tests {
                         transform: Normal,
                         position: None,
                         max_bpc: None,
+                        max_render_time: None,
                         mode: None,
                         modeline: Some(
                             Modeline {

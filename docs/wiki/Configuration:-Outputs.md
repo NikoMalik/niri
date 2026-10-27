@@ -16,6 +16,7 @@ output "eDP-1" {
     focus-at-startup
     backdrop-color "#001100"
     // max-bpc 8
+    // max-render-time 4
 
     hot-corners {
         // off
@@ -298,6 +299,26 @@ Valid values are `6`, `8`, `10`, `12`, `14`, `16`.
 // Set 8 max-bpc on HDMI-A-1 to lower the bandwidth.
 output "HDMI-A-1" {
     max-bpc 8
+}
+```
+
+### `max-render-time`
+
+Delay rendering until this many milliseconds before the next vblank.
+
+By default, niri renders a new frame right after the previous one is shown.
+With `max-render-time`, niri waits and starts rendering later, so the frame includes newer input and client updates.
+This lowers the input latency by up to one frame.
+
+If rendering takes longer than this time, the frame misses the vblank and is shown one refresh later, so set it a bit above your usual render time (you can check it with Tracy).
+Start around `4` and lower it while the motion stays smooth.
+
+It does nothing with VRR or while tearing is active, since there is no fixed vblank to aim for then.
+`0` or unset turns it off.
+
+```kdl
+output "DP-1" {
+    max-render-time 4
 }
 ```
 

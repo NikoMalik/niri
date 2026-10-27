@@ -61,6 +61,8 @@ pub struct Output {
     pub position: Option<Position>,
     #[knuffel(child, unwrap(argument))]
     pub max_bpc: Option<MaxBpc>,
+    #[knuffel(child, unwrap(argument))]
+    pub max_render_time: Option<u32>,
     #[knuffel(child)]
     pub mode: Option<Mode>,
     #[knuffel(child)]
@@ -104,6 +106,7 @@ impl Default for Output {
             transform: Transform::Normal,
             position: None,
             max_bpc: None,
+            max_render_time: None,
             mode: None,
             modeline: None,
             variable_refresh_rate: None,
