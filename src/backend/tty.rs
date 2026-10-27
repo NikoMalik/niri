@@ -2085,15 +2085,15 @@ impl Tty {
             presentation_mode,
         ) {
             Ok(res) => {
-                let (async_fence_wait_disabled, force_wait) = {
+                let (async_fence_wait, force_wait) = {
                     let debug = &self.config.borrow().debug;
                     (
-                        debug.disable_async_fence_wait,
+                        debug.async_fence_wait,
                         debug.wait_for_frame_completion_before_queueing,
                     )
                 };
-                let wait_for_frame_completion = !async_fence_wait_disabled
-                    && (device.is_nvidia || res.needs_sync() || force_wait);
+                let wait_for_frame_completion =
+                    async_fence_wait && (device.is_nvidia || res.needs_sync() || force_wait);
                 let mut completion_fences = SmallVec::<[_; 4]>::new();
                 if wait_for_frame_completion {
                     // Take every plane's synchronization point out of Smithay. Once they have all

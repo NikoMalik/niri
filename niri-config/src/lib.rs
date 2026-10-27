@@ -2824,7 +2824,7 @@ mod tests {
                 preview_render: None,
                 dbus_interfaces_in_non_session_instances: false,
                 wait_for_frame_completion_before_queueing: false,
-                disable_async_fence_wait: false,
+                async_fence_wait: false,
                 enable_overlay_planes: false,
                 disable_cursor_plane: false,
                 disable_direct_scanout: false,

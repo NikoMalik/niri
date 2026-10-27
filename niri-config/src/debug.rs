@@ -7,7 +7,7 @@ pub struct Debug {
     pub preview_render: Option<PreviewRender>,
     pub dbus_interfaces_in_non_session_instances: bool,
     pub wait_for_frame_completion_before_queueing: bool,
-    pub disable_async_fence_wait: bool,
+    pub async_fence_wait: bool,
     pub enable_overlay_planes: bool,
     pub disable_cursor_plane: bool,
     pub disable_direct_scanout: bool,
@@ -39,7 +39,7 @@ pub struct DebugPart {
     #[knuffel(child)]
     pub wait_for_frame_completion_before_queueing: Option<Flag>,
     #[knuffel(child)]
-    pub disable_async_fence_wait: Option<Flag>,
+    pub async_fence_wait: Option<Flag>,
     #[knuffel(child)]
     pub enable_overlay_planes: Option<Flag>,
     #[knuffel(child)]
@@ -88,7 +88,7 @@ impl MergeWith<DebugPart> for Debug {
             (self, part),
             dbus_interfaces_in_non_session_instances,
             wait_for_frame_completion_before_queueing,
-            disable_async_fence_wait,
+            async_fence_wait,
             enable_overlay_planes,
             disable_cursor_plane,
             disable_direct_scanout,
