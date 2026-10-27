@@ -119,6 +119,36 @@ impl MergeWith<ClipboardPart> for Clipboard {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PixelCorners {
+    pub pixel: f64,
+    pub steps: u32,
+}
+
+impl Default for PixelCorners {
+    fn default() -> Self {
+        Self {
+            pixel: 0.,
+            steps: 2,
+        }
+    }
+}
+
+#[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
+pub struct PixelCornersPart {
+    #[knuffel(child, unwrap(argument))]
+    pub pixel: Option<FloatOrInt<0, 65535>>,
+    #[knuffel(child, unwrap(argument))]
+    pub steps: Option<u32>,
+}
+
+impl MergeWith<PixelCornersPart> for PixelCorners {
+    fn merge_with(&mut self, part: &PixelCornersPart) {
+        merge!((self, part), pixel);
+        merge_clone!((self, part), steps);
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Overview {
     pub zoom: f64,
     pub backdrop_color: Color,

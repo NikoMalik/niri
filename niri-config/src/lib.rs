@@ -83,6 +83,7 @@ pub struct Config {
     pub blur: Blur,
     pub gestures: Gestures,
     pub overview: Overview,
+    pub pixel_corners: PixelCorners,
     pub environment: Environment,
     pub xwayland_satellite: XwaylandSatellite,
     pub window_rules: Vec<WindowRule>,
@@ -204,6 +205,7 @@ where
                 "blur" => m_merge!(blur),
                 "gestures" => m_merge!(gestures),
                 "overview" => m_merge!(overview),
+                "pixel-corners" => m_merge!(pixel_corners),
                 "xwayland-satellite" => m_merge!(xwayland_satellite),
                 "switch-events" => m_merge!(switch_events),
                 "debug" => m_merge!(debug),
@@ -1297,6 +1299,11 @@ mod tests {
                 disable-primary
             }
 
+            pixel-corners {
+                pixel 3
+                steps 4
+            }
+
             hotkey-overlay {
                 skip-at-startup
             }
@@ -2179,6 +2186,10 @@ mod tests {
                         a: 0.3137255,
                     },
                 },
+            },
+            pixel_corners: PixelCorners {
+                pixel: 3.0,
+                steps: 4,
             },
             environment: Environment(
                 [

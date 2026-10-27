@@ -2032,6 +2032,14 @@ impl State {
             window_rules_changed = true;
         }
 
+        if config.pixel_corners != old_config.pixel_corners {
+            crate::pixel_corners::set(
+                config.pixel_corners.pixel as f32,
+                config.pixel_corners.steps,
+            );
+            window_rules_changed = true;
+        }
+
         if config.layer_rules != old_config.layer_rules {
             layer_rules_changed = true;
         }
@@ -2730,6 +2738,11 @@ impl Niri {
         let rate = 1.0 / config_.animations.slowdown.max(0.001);
         animation_clock.set_rate(rate);
         animation_clock.set_complete_instantly(config_.animations.off);
+
+        crate::pixel_corners::set(
+            config_.pixel_corners.pixel as f32,
+            config_.pixel_corners.steps,
+        );
 
         let layout = Layout::new(animation_clock.clone(), &config_);
 

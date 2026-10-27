@@ -1,7 +1,7 @@
 //! `niri msg action set-pixel-corners PIXEL [--steps N]` (0 = off):
 //! windows get staircase corners of N steps of PIXEL logical px (a window rule's radius of 0, or
 //! none, becomes N × PIXEL), drawn with hard edges by rounding_alpha.frag, their border too.
-//! A shell with pixel-art decorations sets it; nothing goes to niri's config.
+//! Also set by the `pixel-corners { pixel N; steps N; }` config section.
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
