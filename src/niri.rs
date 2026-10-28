@@ -413,7 +413,7 @@ pub struct Niri {
     /// active, and cleared whenever the configured keymap changes. Used to
     /// compare against virtual keyboard keymaps, and to switch back to it
     /// afterwards without going through the config again.
-    pub configured_keymap: Option<Arc<str>>,
+    pub configured_keymap: Option<smithay::input::keyboard::KeymapFile>,
 
     pub cursor_manager: CursorManager,
     pub cursor_texture_cache: CursorTextureCache,
