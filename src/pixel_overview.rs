@@ -47,10 +47,16 @@ pub fn set_filter(renderer: &mut GlesRenderer, overview: bool) {
     }
 }
 
+#[derive(PartialEq, Eq, Hash)]
+enum LabelText {
+    Index(usize),
+    Name(String),
+}
+
 #[derive(Default)]
 struct Cache {
-    labels: HashMap<(String, u64, [u8; 4]), Option<TextureBuffer<GlesTexture>>>,
-    frames: HashMap<(String, u64), [SolidColorBuffer; 4]>,
+    labels: HashMap<(LabelText, u64, [u8; 4]), Option<TextureBuffer<GlesTexture>>>,
+    frames: HashMap<u64, [SolidColorBuffer; 4]>,
 }
 
 thread_local! {
@@ -60,7 +66,6 @@ thread_local! {
 pub fn render<R: NiriRenderer, W: LayoutElement>(
     renderer: &mut R,
     mon: &Monitor<W>,
-    output_name: &str,
     active: Color,
     inactive: Color,
     push: &mut dyn FnMut(OutputRenderElements<R>),
@@ -98,10 +103,7 @@ pub fn render<R: NiriRenderer, W: LayoutElement>(
                 Rectangle::new(Point::from((x, y + t)), Size::from((t, h - t * 2.))),
                 Rectangle::new(Point::from((x + w - t, y + t)), Size::from((t, h - t * 2.))),
             ];
-            let buffers = cache
-                .frames
-                .entry((output_name.to_owned(), ws.id().get()))
-                .or_default();
+            let buffers = cache.frames.entry(ws.id().get()).or_default();
             for (buffer, bar) in buffers.iter_mut().zip(bars) {
                 buffer.update(bar.size, color32);
                 let elem =
@@ -109,12 +111,19 @@ pub fn render<R: NiriRenderer, W: LayoutElement>(
                 push(elem.into());
             }
 
-            let text = ws.name().cloned().unwrap_or_else(|| (idx + 1).to_string());
+            let text = match ws.name() {
+                Some(name) => LabelText::Name(name.clone()),
+                None => LabelText::Index(idx + 1),
+            };
             let rgba = color.to_array_unpremul().map(|c| (c * 255.).round() as u8);
             let label = cache
                 .labels
-                .entry((text.clone(), scale.to_bits(), rgba))
-                .or_insert_with(|| {
+                .entry((text, scale.to_bits(), rgba))
+                .or_insert_with_key(|(text, _, _)| {
+                    let text = match text {
+                        LabelText::Index(idx) => idx.to_string(),
+                        LabelText::Name(name) => name.clone(),
+                    };
                     render_label(renderer.as_gles_renderer(), &text, scale, color)
                         .map_err(|err| warn!("error rendering a workspace label: {err:?}"))
                         .ok()

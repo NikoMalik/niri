@@ -5095,7 +5095,6 @@ impl Niri {
             crate::pixel_overview::render(
                 ctx.renderer,
                 mon,
-                &output.name(),
                 focus_ring.active_color,
                 focus_ring.inactive_color,
                 push,
@@ -5270,7 +5269,7 @@ impl Niri {
             Duration::from_millis(u64::from(ms))
         };
 
-        if self.output_allows_tearing(output) || self.tearing_now(output) {
+        if self.tearing_now(output) || self.output_allows_tearing(output) {
             return false;
         }
 
@@ -5492,6 +5491,11 @@ impl Niri {
 
     pub fn output_allows_tearing(&self, output: &Output) -> bool {
         self.layout.windows_for_output(output).any(|mapped| {
+            let rule = mapped.rules().allow_tearing;
+            if rule == Some(false) {
+                return false;
+            }
+
             let mut visible = false;
             let mut hint = false;
 
@@ -5507,7 +5511,7 @@ impl Niri {
                 hint |= *state.current().presentation_hint() == PresentationHint::Async;
             });
 
-            match mapped.rules().allow_tearing {
+            match rule {
                 Some(true) => visible,
                 Some(false) => false,
                 None => hint,
