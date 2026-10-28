@@ -2129,7 +2129,7 @@ impl Tty {
                     if let PrimaryPlaneElement::Swapchain(element) = &res.primary_element {
                         let _span = tracy_client::span!("export release fence");
                         if let Some(fence) = element.sync.export() {
-                            niri.stamp_release_fences(output, fence.as_fd());
+                            niri.stamp_release_fences(output, fence.as_fd(), &res.states);
                         }
                     }
                 }

@@ -33,7 +33,7 @@ use smithay::backend::renderer::element::utils::{
 };
 use smithay::backend::renderer::element::{
     default_primary_scanout_output_compare, Element, Id, Kind, PrimaryScanoutOutput, RenderElement,
-    RenderElementStates,
+    RenderElementPresentationState, RenderElementStates,
 };
 use smithay::backend::renderer::gles::GlesRenderer;
 use smithay::backend::renderer::sync::SyncPoint;
@@ -5689,16 +5689,29 @@ impl Niri {
         }
     }
 
-    /// Stamps the frame's render fence onto the buffers of all surfaces on this output.
+    /// Stamps the frame's render fence onto the buffers of the surfaces sampled in this frame.
     ///
     /// Explicit-sync release points then signal on GPU completion of the frame that last
-    /// sampled the buffer, rather than immediately when the buffer is replaced. Stamping is
-    /// deliberately unfiltered: for surfaces that were direct scanned out or skipped this
-    /// frame, the fence is merely conservative (this frame's rendering finishes no earlier
-    /// than any previous read on the same context), and buffers without a release point
-    /// ignore it.
-    pub fn stamp_release_fences(&self, output: &Output, fence: BorrowedFd<'_>) {
-        self.for_each_output_surface(output, |_, states| {
+    /// sampled the buffer, rather than immediately when the buffer is replaced.
+    pub fn stamp_release_fences(
+        &self,
+        output: &Output,
+        fence: BorrowedFd<'_>,
+        render_element_states: &RenderElementStates,
+    ) {
+        self.for_each_output_surface(output, |surface, states| {
+            let sampled = render_element_states
+                .element_render_state(surface)
+                .is_some_and(|state| {
+                    matches!(
+                        state.presentation_state,
+                        RenderElementPresentationState::Rendering { .. }
+                    )
+                });
+            if !sampled {
+                return;
+            }
+
             if let Some(state) = states.data_map.get::<RendererSurfaceStateUserData>() {
                 if let Some(buffer) = state.lock().unwrap().buffer() {
                     buffer.set_release_fence(fence);
