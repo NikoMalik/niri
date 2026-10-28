@@ -864,7 +864,12 @@ impl State {
         }
 
         let mut min_next_schedule: Option<Duration> = None;
-        for output in self.niri.queued_outputs() {
+        let outputs = if smithay::wayland::commit_timing::has_pending_barriers() {
+            self.niri.queued_outputs()
+        } else {
+            Vec::new()
+        };
+        for output in outputs {
             let Some(output_state) = self.niri.output_state.get(&output) else {
                 continue;
             };
