@@ -124,7 +124,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "710e8eae58854cdc1790fcb56cca04d712a17be849eeb81da2a724bf4bae2bc4"
 dependencies = [
  "anstyle",
- "unicode-width 0.2.2",
+ "unicode-width 0.2.3",
 ]
 
 [[package]]
@@ -2852,6 +2852,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "probemap"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c07d33c166ac82a9027447315fd246faff4ce3e1887fc9029526a5c53a12940"
+dependencies = [
+ "allocator-api2",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3390,7 +3399,7 @@ checksum = "e8e2fb0f499abb4d162f2bedad68f5ef91a1682b5a03596ddb67efd37768d100"
 [[package]]
 name = "smithay"
 version = "0.7.0"
-source = "git+https://github.com/NikoMalik/smithay.git?rev=e969e48b6764fe6acf7a844c99842aeabfa11474#e969e48b6764fe6acf7a844c99842aeabfa11474"
+source = "git+https://github.com/NikoMalik/smithay.git?rev=38c2fa8882535dc0208f997561520a69434fa4dd#38c2fa8882535dc0208f997561520a69434fa4dd"
 dependencies = [
  "aliasable",
  "appendlist",
@@ -3415,6 +3424,7 @@ dependencies = [
  "pixman",
  "pkg-config",
  "portable-atomic",
+ "probemap",
  "profiling",
  "rand",
  "reis",
@@ -3467,7 +3477,7 @@ dependencies = [
 [[package]]
 name = "smithay-drm-extras"
 version = "0.1.0"
-source = "git+https://github.com/NikoMalik/smithay.git?rev=e969e48b6764fe6acf7a844c99842aeabfa11474#e969e48b6764fe6acf7a844c99842aeabfa11474"
+source = "git+https://github.com/NikoMalik/smithay.git?rev=38c2fa8882535dc0208f997561520a69434fa4dd#38c2fa8882535dc0208f997561520a69434fa4dd"
 dependencies = [
  "drm",
  "libdisplay-info",
@@ -3903,9 +3913,9 @@ checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
 
 [[package]]
 name = "unicode-width"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+checksum = "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557"
 
 [[package]]
 name = "url"
