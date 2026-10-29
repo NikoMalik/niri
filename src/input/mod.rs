@@ -1063,6 +1063,11 @@ impl State {
                 self.niri.refresh_window_rules();
                 self.niri.queue_redraw_all();
             }
+            Action::SetPixelShadow(pixel) => {
+                crate::pixel_shadow::set(pixel as f32);
+                self.niri.update_all_windows();
+                self.niri.queue_redraw_all();
+            }
             Action::SetPixelOverview(pixel, font) => {
                 crate::pixel_overview::set(pixel as f32, font);
                 self.niri.queue_redraw_all();

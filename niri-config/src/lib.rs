@@ -85,6 +85,7 @@ pub struct Config {
     pub overview: Overview,
     pub pixel_corners: PixelCorners,
     pub pixel_overview: PixelOverview,
+    pub pixel_shadow: PixelShadow,
     pub environment: Environment,
     pub xwayland_satellite: XwaylandSatellite,
     pub window_rules: Vec<WindowRule>,
@@ -208,6 +209,7 @@ where
                 "overview" => m_merge!(overview),
                 "pixel-corners" => m_merge!(pixel_corners),
                 "pixel-overview" => m_merge!(pixel_overview),
+                "pixel-shadow" => m_merge!(pixel_shadow),
                 "xwayland-satellite" => m_merge!(xwayland_satellite),
                 "switch-events" => m_merge!(switch_events),
                 "debug" => m_merge!(debug),
@@ -1312,6 +1314,10 @@ mod tests {
                 font "CozetteVector 16"
             }
 
+            pixel-shadow {
+                pixel 2
+            }
+
             hotkey-overlay {
                 skip-at-startup
             }
@@ -2208,6 +2214,9 @@ mod tests {
             pixel_overview: PixelOverview {
                 pixel: 2.0,
                 font: "CozetteVector 16",
+            },
+            pixel_shadow: PixelShadow {
+                pixel: 2.0,
             },
             environment: Environment(
                 [

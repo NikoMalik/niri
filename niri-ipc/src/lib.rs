@@ -272,6 +272,16 @@ pub enum Action {
         #[serde(default = "default_pixel_steps")]
         steps: u32,
     },
+    /// Draw window shadows as dithered pixel dots.
+    ///
+    /// Window shadows turn on and are drawn as dots of `pixel` logical pixels instead of a smooth
+    /// blur; their colors, softness and offset stay the layout's. 0 turns it off.
+    #[cfg_attr(feature = "clap", clap(about = "Set pixel dithered window shadows"))]
+    SetPixelShadow {
+        /// The dots' pixel in logical pixels; 0 to turn it off.
+        #[cfg_attr(feature = "clap", arg())]
+        pixel: f64,
+    },
     /// Draw the overview in pixels.
     ///
     /// Sharp (nearest-filtered) thumbnails and a frame of 2 × `pixel` logical pixels with notched

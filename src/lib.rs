@@ -19,6 +19,7 @@ pub mod layout;
 pub mod niri;
 pub mod pixel_corners;
 pub mod pixel_overview;
+pub mod pixel_shadow;
 pub mod protocols;
 pub mod render_helpers;
 pub mod rubber_band;

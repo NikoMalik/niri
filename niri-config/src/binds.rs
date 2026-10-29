@@ -437,6 +437,8 @@ pub enum Action {
     #[knuffel(skip)]
     SetPixelOverview(f64, String),
     #[knuffel(skip)]
+    SetPixelShadow(f64),
+    #[knuffel(skip)]
     SetTearing(bool, Option<String>),
     #[knuffel(skip)]
     SwitchPresetWindowWidthBackById(u64),
@@ -748,6 +750,7 @@ impl From<niri_ipc::Action> for Action {
             niri_ipc::Action::SetPixelOverview { pixel, font } => {
                 Self::SetPixelOverview(pixel, font)
             }
+            niri_ipc::Action::SetPixelShadow { pixel } => Self::SetPixelShadow(pixel),
 
             niri_ipc::Action::SwitchPresetWindowWidthBack { id: Some(id) } => {
                 Self::SwitchPresetWindowWidthBackById(id)

@@ -1981,6 +1981,7 @@ impl State {
         let mut shaders_changed = false;
         let mut cursor_inactivity_timeout_changed = false;
         let mut recent_windows_changed = false;
+        let mut pixel_shadow_changed = false;
         let mut xwls_changed = false;
         let mut old_config = self.niri.config.borrow_mut();
 
@@ -2064,6 +2065,11 @@ impl State {
                 config.pixel_corners.steps,
             );
             window_rules_changed = true;
+        }
+
+        if config.pixel_shadow != old_config.pixel_shadow {
+            crate::pixel_shadow::set(config.pixel_shadow.pixel as f32);
+            pixel_shadow_changed = true;
         }
 
         if config.pixel_overview != old_config.pixel_overview {
@@ -2224,6 +2230,10 @@ impl State {
         // due to the SDL2 bug... I don't imagine clients are prepared for the xdg-decoration
         // global suddenly appearing? Either way, right now it's live-reloaded in a sense that new
         // clients will use the new xdg-decoration setting.
+
+        if pixel_shadow_changed {
+            self.niri.update_all_windows();
+        }
 
         self.niri.queue_redraw_all();
     }
@@ -2776,6 +2786,7 @@ impl Niri {
             config_.pixel_corners.pixel as f32,
             config_.pixel_corners.steps,
         );
+        crate::pixel_shadow::set(config_.pixel_shadow.pixel as f32);
         crate::pixel_overview::set(
             config_.pixel_overview.pixel as f32,
             config_.pixel_overview.font.clone(),
@@ -5693,6 +5704,15 @@ impl Niri {
     ///
     /// Explicit-sync release points then signal on GPU completion of the frame that last
     /// sampled the buffer, rather than immediately when the buffer is replaced.
+    pub fn update_all_windows(&mut self) {
+        let mut windows = Vec::new();
+        self.layout
+            .with_windows(|mapped, _, _, _| windows.push(mapped.window.clone()));
+        for window in windows {
+            self.layout.update_window(&window, None);
+        }
+    }
+
     pub fn stamp_release_fences(
         &self,
         output: &Output,
