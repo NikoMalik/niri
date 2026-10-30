@@ -23,12 +23,8 @@ uniform vec4 window_corner_radius;
 
 uniform float niri_shadow_pixel;
 
-float bayer2(vec2 a) {
-  a = floor(a);
-  return fract(a.x / 2.0 + a.y * a.y * 0.75);
-}
-float bayer4(vec2 a) {
-  return bayer2(0.5 * a) * 0.25 + bayer2(a);
+float pixel_shadow_level(float coverage) {
+  return 0.5 * (step(0.15, coverage) + step(0.5, coverage));
 }
 
 // Based on: https://madebyevan.com/shaders/fast-rounded-rectangle-shadows/
@@ -90,9 +86,8 @@ void main() {
 
     vec4 color = shadow_color;
 
-    vec2 cell = floor(coords_geo.xy / max(niri_shadow_pixel, 1.0));
     if (niri_shadow_pixel > 0.0)
-        coords_geo.xy = (cell + 0.5) * niri_shadow_pixel;
+        coords_geo.xy = (floor(coords_geo.xy / niri_shadow_pixel) + 0.5) * niri_shadow_pixel;
 
     float shadow_value;
     if (sigma < 0.1) {
@@ -112,7 +107,7 @@ void main() {
         );
     }
     if (niri_shadow_pixel > 0.0)
-        shadow_value = shadow_value > bayer4(cell) + 1.0 / 32.0 ? 1.0 : 0.0;
+        shadow_value = pixel_shadow_level(shadow_value);
 
     color = color * shadow_value;
 
