@@ -292,6 +292,7 @@ pub struct Niri {
     pub blocker_cleared_rx: Receiver<Client>,
 
     pub output_state: HashMap<Output, OutputState>,
+    render_elements_capacity: Cell<usize>,
 
     // When false, we're idling with monitors powered off.
     pub monitors_active: bool,
@@ -3068,6 +3069,7 @@ impl Niri {
             global_space: Space::default(),
             sorted_outputs: Vec::default(),
             output_state: HashMap::new(),
+            render_elements_capacity: Cell::new(0),
             unmapped_windows: HashMap::new(),
             tearing_output: None,
             unmapped_layer_surfaces: HashSet::new(),
@@ -4805,10 +4807,11 @@ impl Niri {
         output: &Output,
         include_pointer: bool,
     ) -> Vec<OutputRenderElements<R>> {
-        let mut elements = Vec::new();
+        let mut elements = Vec::with_capacity(self.render_elements_capacity.get());
         self.render(ctx, output, include_pointer, &mut |elem| {
             elements.push(elem)
         });
+        self.render_elements_capacity.set(elements.len() + 16);
         elements
     }
 
