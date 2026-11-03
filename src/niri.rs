@@ -5703,10 +5703,6 @@ impl Niri {
         }
     }
 
-    /// Stamps the frame's render fence onto the buffers of the surfaces sampled in this frame.
-    ///
-    /// Explicit-sync release points then signal on GPU completion of the frame that last
-    /// sampled the buffer, rather than immediately when the buffer is replaced.
     pub fn update_all_windows(&mut self) {
         let mut windows = Vec::new();
         self.layout
@@ -5716,6 +5712,11 @@ impl Niri {
         }
     }
 
+    /// Stamps the frame's render fence onto the buffers of the surfaces sampled in this frame.
+    ///
+    /// Explicit-sync release points then signal on GPU completion of the frame that last
+    /// sampled the buffer, rather than immediately when the buffer is replaced. Must run after
+    /// [`Self::update_primary_scanout_output`] for this frame.
     pub fn stamp_release_fences(
         &self,
         output: &Output,
@@ -5723,15 +5724,19 @@ impl Niri {
         render_element_states: &RenderElementStates,
     ) {
         self.for_each_output_surface(output, |surface, states| {
-            let sampled = render_element_states
+            if surface_primary_scanout_output(surface, states).as_ref() != Some(output) {
+                return;
+            }
+            let scanned_out = render_element_states
                 .element_render_state(surface)
                 .is_some_and(|state| {
                     matches!(
                         state.presentation_state,
-                        RenderElementPresentationState::Rendering { .. }
+                        RenderElementPresentationState::ZeroCopy
+                            | RenderElementPresentationState::Async
                     )
                 });
-            if !sampled {
+            if scanned_out {
                 return;
             }
 

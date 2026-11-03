@@ -2123,25 +2123,29 @@ impl Tty {
                     }
                 }
 
+                let is_empty = res.is_empty;
+                let states = res.states;
+                let defer_dmabuf_feedbacks = !is_empty && completion_fences.is_empty();
+                niri.update_primary_scanout_output(output, &states);
+
                 // Stamp the frame's render fence onto the sampled buffers, so explicit-sync
                 // release points signal on GPU completion rather than on buffer replacement.
-                if niri.syncobj_state.is_some() && !res.is_empty {
+                if niri.syncobj_state.is_some() && !is_empty {
                     if let PrimaryPlaneElement::Swapchain(element) = &res.primary_element {
                         let _span = tracy_client::span!("export release fence");
                         if let Some(fence) = element.sync.export() {
-                            niri.stamp_release_fences(output, fence.as_fd(), &res.states);
+                            niri.stamp_release_fences(output, fence.as_fd(), &states);
                         }
                     }
                 }
-
-                niri.update_primary_scanout_output(output, &res.states);
-                if let Some(dmabuf_feedback) = surface.dmabuf_feedback.as_ref() {
-                    niri.send_dmabuf_feedbacks(output, dmabuf_feedback, &res.states);
+                if !defer_dmabuf_feedbacks {
+                    if let Some(dmabuf_feedback) = surface.dmabuf_feedback.as_ref() {
+                        niri.send_dmabuf_feedbacks(output, dmabuf_feedback, &states);
+                    }
                 }
 
-                if !res.is_empty {
-                    let presentation_feedbacks =
-                        niri.take_presentation_feedbacks(output, &res.states);
+                if !is_empty {
+                    let presentation_feedbacks = niri.take_presentation_feedbacks(output, &states);
                     let data = (presentation_feedbacks, target_presentation_time);
 
                     if !completion_fences.is_empty() {
@@ -2219,7 +2223,13 @@ impl Tty {
                         return RenderResult::Submitted;
                     }
 
-                    match drm_compositor.queue_frame(data) {
+                    let queued = drm_compositor.queue_frame(data);
+
+                    if let Some(dmabuf_feedback) = surface.dmabuf_feedback.as_ref() {
+                        niri.send_dmabuf_feedbacks(output, dmabuf_feedback, &states);
+                    }
+
+                    match queued {
                         Ok(()) => {
                             let output_state = niri.output_state.get_mut(output).unwrap();
                             let new_state = RedrawState::WaitingForVBlank {
