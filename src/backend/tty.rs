@@ -32,6 +32,7 @@ use smithay::backend::drm::{
 use smithay::backend::egl::context::ContextPriority;
 use smithay::backend::egl::{EGLDevice, EGLDisplay};
 use smithay::backend::libinput::{LibinputInputBackend, LibinputSessionInterface};
+use smithay::backend::renderer::element::RenderElementPresentationState;
 use smithay::backend::renderer::gles::GlesRenderer;
 use smithay::backend::renderer::multigpu::gbm::GbmGlesBackend;
 use smithay::backend::renderer::multigpu::{ApiDevice, GpuManager, MultiFrame, MultiRenderer};
@@ -395,6 +396,7 @@ struct Surface {
     compositor: GbmDrmCompositor,
     connector: connector::Handle,
     dmabuf_feedback: Option<SurfaceDmabufFeedback>,
+    was_direct_scanout: Option<bool>,
     gamma_props: Option<GammaProps>,
     /// Gamma change to apply upon session resume.
     pending_gamma_change: Option<Option<Vec<u16>>>,
@@ -1610,6 +1612,7 @@ impl Tty {
             connector: connector.handle(),
             compositor,
             dmabuf_feedback,
+            was_direct_scanout: None,
             gamma_props,
             pending_gamma_change: None,
             vblank_frame: None,
@@ -2085,6 +2088,35 @@ impl Tty {
             presentation_mode,
         ) {
             Ok(res) => {
+                let is_direct_scanout =
+                    !matches!(res.primary_element, PrimaryPlaneElement::Swapchain(_));
+                if surface.was_direct_scanout != Some(is_direct_scanout) {
+                    if is_direct_scanout {
+                        debug!(
+                            connector = surface.name.connector,
+                            "direct scan-out engaged on primary plane"
+                        );
+                    } else {
+                        let denied: Vec<_> = res
+                            .states
+                            .states
+                            .values()
+                            .filter_map(|state| match state.presentation_state {
+                                RenderElementPresentationState::Rendering {
+                                    reason: Some(reason),
+                                } => Some(reason),
+                                _ => None,
+                            })
+                            .collect();
+                        debug!(
+                            connector = surface.name.connector,
+                            ?denied,
+                            "compositing on primary plane"
+                        );
+                    }
+                    surface.was_direct_scanout = Some(is_direct_scanout);
+                }
+
                 let (async_fence_wait, force_wait) = {
                     let debug = &self.config.borrow().debug;
                     (
@@ -2256,7 +2288,7 @@ impl Tty {
                             return RenderResult::Submitted;
                         }
                         Err(err) => {
-                            warn!("error queueing frame: {err}");
+                            warn!("error queueing frame: {err:?}");
                         }
                     }
                 } else {
