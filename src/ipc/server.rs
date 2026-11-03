@@ -20,6 +20,7 @@ use niri_ipc::{
     Action, Event, KeyboardLayouts, OutputConfigChanged, Overview, Reply, Request, Response,
     Timestamp, WindowLayout, Workspace,
 };
+use smallvec::SmallVec;
 use smithay::desktop::layer_map_for_output;
 use smithay::input::pointer::{
     CursorIcon, CursorImageStatus, Focus, GrabStartData as PointerGrabStartData,
@@ -603,11 +604,11 @@ impl State {
         let focused_ws_id = layout.active_workspace().map(|ws| ws.id().get());
 
         // Check for workspace changes.
-        let mut seen = HashSet::new();
+        let mut seen = SmallVec::<[u64; 32]>::new();
         let mut need_workspaces_changed = false;
         for (mon, ws_idx, ws) in layout.workspaces() {
             let id = ws.id().get();
-            seen.insert(id);
+            seen.push(id);
 
             let Some(ipc_ws) = state.workspaces.get(&id) else {
                 // A new workspace was added.
@@ -703,11 +704,11 @@ impl State {
         let mut batch_change_layouts: Vec<(u64, WindowLayout)> = Vec::new();
 
         // Check for window changes.
-        let mut seen = HashSet::new();
+        let mut seen = SmallVec::<[u64; 32]>::new();
         let mut focused_id = None;
         layout.with_windows(|mapped, _, ws_id, window_layout| {
             let id = mapped.id().get();
-            seen.insert(id);
+            seen.push(id);
 
             if mapped.is_focused() {
                 focused_id = Some(id);

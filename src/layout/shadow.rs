@@ -1,4 +1,5 @@
 use std::iter::zip;
+use std::mem;
 
 use niri_config::CornerRadius;
 use smithay::utils::{Logical, Point, Rectangle, Size};
@@ -9,6 +10,7 @@ use crate::render_helpers::shadow::ShadowRenderElement;
 #[derive(Debug)]
 pub struct Shadow {
     shader_rects: Vec<Rectangle<f64, Logical>>,
+    background_rects: Vec<Rectangle<f64, Logical>>,
     shaders: Vec<ShadowRenderElement>,
     config: niri_config::Shadow,
 }
@@ -17,6 +19,7 @@ impl Shadow {
     pub fn new(config: niri_config::Shadow) -> Self {
         Self {
             shader_rects: Vec::new(),
+            background_rects: Vec::new(),
             shaders: Vec::new(),
             config,
         }
@@ -116,13 +119,23 @@ impl Shadow {
                 Size::from((bottom_left, bottom_left)),
             );
 
-            let mut background =
-                window_geo.subtract_rects([top_left, top_right, bottom_right, bottom_left]);
+            let mut background = mem::take(&mut self.background_rects);
+            background.clear();
+            background.push(window_geo);
+            let mut background = Rectangle::subtract_rects_many_in_place(
+                background,
+                [top_left, top_right, bottom_right, bottom_left],
+            );
             for rect in &mut background {
                 rect.loc -= offset;
             }
 
-            self.shader_rects = shader_geo.subtract_rects(background);
+            let mut shader_rects = mem::take(&mut self.shader_rects);
+            shader_rects.clear();
+            shader_rects.push(shader_geo);
+            self.shader_rects =
+                Rectangle::subtract_rects_many_in_place(shader_rects, background.iter().copied());
+            self.background_rects = background;
             self.shaders
                 .resize_with(self.shader_rects.len(), Default::default);
 

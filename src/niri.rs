@@ -868,7 +868,7 @@ impl State {
         let outputs = if smithay::wayland::commit_timing::has_pending_barriers() {
             self.niri.queued_outputs()
         } else {
-            Vec::new()
+            SmallVec::new()
         };
         for output in outputs {
             let Some(output_state) = self.niri.output_state.get(&output) else {
@@ -4322,7 +4322,7 @@ impl Niri {
         state.redraw_state = mem::take(&mut state.redraw_state).queue_redraw();
     }
 
-    pub fn queued_outputs(&self) -> Vec<Output> {
+    pub fn queued_outputs(&self) -> SmallVec<[Output; 4]> {
         self.output_state.keys().cloned().collect()
     }
 
