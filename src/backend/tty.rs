@@ -2092,7 +2092,7 @@ impl Tty {
                     !matches!(res.primary_element, PrimaryPlaneElement::Swapchain(_));
                 if surface.was_direct_scanout != Some(is_direct_scanout) {
                     if is_direct_scanout {
-                        debug!(
+                        info!(
                             connector = surface.name.connector,
                             "direct scan-out engaged on primary plane"
                         );
@@ -2108,7 +2108,7 @@ impl Tty {
                                 _ => None,
                             })
                             .collect();
-                        debug!(
+                        info!(
                             connector = surface.name.connector,
                             ?denied,
                             "compositing on primary plane"
