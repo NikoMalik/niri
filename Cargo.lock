@@ -407,9 +407,9 @@ checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
 name = "bbtree"
-version = "0.1.7"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00fb36d1cd69152b5f7ba6f9e014b834e233d89618086f8287aac28488cc7cf8"
+checksum = "e7012e5cc4167da28dd29f82e6a5c5dd934946741f4d6b8c51f2eea2ccc29652"
 dependencies = [
  "vstd",
 ]

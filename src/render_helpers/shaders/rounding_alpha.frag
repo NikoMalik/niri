@@ -39,3 +39,7 @@ float niri_rounding_alpha(vec2 coords, vec2 size, vec4 corner_radius) {
     float t = clamp((dist - radius) * niri_scale + 0.5, 0.0, 1.0);
     return 1.0 - t * t * (3.0 - 2.0 * t);
 }
+
+bool niri_pixel_corners() {
+    return niri_pixel > 0.0;
+}
