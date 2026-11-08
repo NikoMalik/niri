@@ -31,6 +31,7 @@ use smithay::backend::drm::{
 };
 use smithay::backend::egl::context::ContextPriority;
 use smithay::backend::egl::{EGLDevice, EGLDisplay};
+use smithay::backend::input::InputTime;
 use smithay::backend::libinput::{LibinputInputBackend, LibinputSessionInterface};
 use smithay::backend::renderer::element::RenderElementPresentationState;
 use smithay::backend::renderer::gles::GlesRenderer;
@@ -648,7 +649,7 @@ impl Tty {
                 // Slightly cursed to do from an idle... But we don't have State here conveniently,
                 // and it should be fine to delay this until the loop callback.
                 niri.event_loop
-                    .insert_idle(|state| state.release_held_inputs());
+                    .insert_idle(|state| state.release_held_inputs(InputTime::now()));
 
                 self.libinput.suspend();
 
@@ -2092,7 +2093,7 @@ impl Tty {
                     !matches!(res.primary_element, PrimaryPlaneElement::Swapchain(_));
                 if surface.was_direct_scanout != Some(is_direct_scanout) {
                     if is_direct_scanout {
-                        info!(
+                        debug!(
                             connector = surface.name.connector,
                             "direct scan-out engaged on primary plane"
                         );
@@ -2108,7 +2109,7 @@ impl Tty {
                                 _ => None,
                             })
                             .collect();
-                        info!(
+                        debug!(
                             connector = surface.name.connector,
                             ?denied,
                             "compositing on primary plane"

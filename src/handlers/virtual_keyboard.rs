@@ -14,7 +14,7 @@
 //!   `DeviceRemoved`).
 
 use smithay::backend::input::{Event, InputEvent, KeyboardKeyEvent};
-use smithay::input::keyboard::{xkb, KeymapFile};
+use smithay::input::keyboard::KeymapFile;
 use smithay::utils::SERIAL_COUNTER;
 use smithay::wayland::input_method::InputMethodSeat;
 use smithay::wayland::virtual_keyboard::{
@@ -170,10 +170,7 @@ impl State {
         // A keymap identical to the configured one (e.g. from an input method
         // forwarding keys with the keymap it received from us) doesn't need to
         // be swapped in, which would needlessly reset the keyboard state.
-        if self
-            .configured_keymap()
-            .is_some_and(|configured| configured.id() == keymap.id())
-        {
+        if self.configured_keymap().id() == keymap.id() {
             self.restore_configured_keymap();
             return;
         }
@@ -232,10 +229,10 @@ impl State {
         self.ipc_keyboard_layouts_changed();
     }
 
-    /// Returns the configured keymap.
-    fn configured_keymap(&mut self) -> Option<KeymapFile> {
+    /// Returns the configured keymap as XKB_KEYMAP_FORMAT_TEXT_V1.
+    fn configured_keymap(&mut self) -> KeymapFile {
         if let Some(keymap) = &self.niri.configured_keymap {
-            return Some(keymap.clone());
+            return keymap.clone();
         }
 
         // The seat has the configured keymap while no virtual keyboard keymap is active.
@@ -244,21 +241,8 @@ impl State {
         }
 
         let keyboard = self.niri.seat.get_keyboard().unwrap();
-        let text = keyboard.with_xkb_state(self, |context| {
-            context.xkb().lock().unwrap().keymap_as_string()
-        });
-        let context = xkb::Context::new(xkb::CONTEXT_NO_FLAGS);
-        let Some(keymap) = xkb::Keymap::new_from_string(
-            &context,
-            text,
-            xkb::KEYMAP_FORMAT_TEXT_V1,
-            xkb::KEYMAP_COMPILE_NO_FLAGS,
-        ) else {
-            warn!("error compiling the configured keymap");
-            return None;
-        };
-        let keymap = KeymapFile::new(&keymap);
+        let keymap = keyboard.keymap_file();
         self.niri.configured_keymap = Some(keymap.clone());
-        Some(keymap)
+        keymap
     }
 }
