@@ -1030,6 +1030,8 @@ impl XdgDecorationHandler for State {
             }
         }
     }
+
+    fn decoration_destroyed(&mut self, _toplevel: ToplevelSurface) {}
 }
 
 /// Whether KDE server decorations are in use.
